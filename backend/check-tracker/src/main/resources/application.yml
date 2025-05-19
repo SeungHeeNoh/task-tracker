@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: check-tracker
+  datasource:
+    url: jdbc:mysql://localhost:3300/checkTracker?serverTimezone=Asia/Seoul
+    username: checkTracker
+    password: checkTracker
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true

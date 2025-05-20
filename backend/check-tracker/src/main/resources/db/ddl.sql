@@ -13,7 +13,7 @@ CREATE TABLE users(
 
 CREATE TABLE check_list(
     check_list_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(50),
+    title VARCHAR(50) NOT NULL,
     created_at DATETIME NOT NULL,
     created_by VARCHAR(50) NOT NULL,
     modified_at DATETIME,

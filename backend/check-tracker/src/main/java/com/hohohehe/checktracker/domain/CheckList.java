@@ -22,4 +22,11 @@ public class CheckList extends AuditingFields {
     @Setter
     @Column(nullable = false)
     private String title;
+
+    public static CheckList of(String title) {
+        CheckList checkList = new CheckList();
+        checkList.setTitle(title);
+
+        return checkList;
+    }
 }

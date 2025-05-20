@@ -37,6 +37,20 @@ class CheckListRepositoryTest {
                 .isNotNull();
     }
 
+    @Test
+    void givenTestData_whenSave_InsertCheckList() {
+        // given
+        long prevCount = checkListRepository.count();
+        CheckList checkList = CheckList.of("test");
+
+        // when
+        checkListRepository.save(checkList);
+
+        // then
+        assertThat(checkListRepository.count())
+                .isEqualTo(prevCount + 1);
+    }
+
     @EnableJpaAuditing
     @TestConfiguration
     static class TestJpaConfig {

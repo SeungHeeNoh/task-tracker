@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.Objects;
+
 @Getter
 @ToString(callSuper = true)
 @Table(indexes = {
@@ -28,5 +30,17 @@ public class CheckList extends AuditingFields {
         checkList.setTitle(title);
 
         return checkList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CheckList checkList)) return false;
+        return Objects.equals(checkListId, checkList.checkListId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(checkListId);
     }
 }

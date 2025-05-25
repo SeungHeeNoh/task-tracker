@@ -27,4 +27,16 @@ public class CheckLog extends AuditingFields {
     @Column
     private LocalDate checkDate;
 
+    private CheckLog() {
+
+    }
+
+    private CheckLog(CheckList checkList, LocalDate checkDate) {
+        this.checkList = checkList;
+        this.checkDate = checkDate;
+    }
+
+    public static CheckLog of(final CheckList checkList, final LocalDate checkDate) {
+        return new CheckLog(checkList, checkDate);
+    }
 }

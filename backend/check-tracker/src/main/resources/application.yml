@@ -1,6 +1,12 @@
 server:
   port: 8080
 
+logging:
+  level:
+    com.hohohehe.checktracker: debug
+    org.springframework.web.servlet: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
 spring:
   application:
     name: check-tracker
@@ -15,3 +21,4 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        default_batch_fetch_size: 100

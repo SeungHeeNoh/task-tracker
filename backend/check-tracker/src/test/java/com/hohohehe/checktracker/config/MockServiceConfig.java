@@ -1,0 +1,14 @@
+package com.hohohehe.checktracker.config;
+
+import com.hohohehe.checktracker.service.CheckListService;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+
+@TestConfiguration
+public class MockServiceConfig {
+    @Bean
+    public CheckListService checkListService() {
+        return Mockito.mock(CheckListService.class);
+    }
+}

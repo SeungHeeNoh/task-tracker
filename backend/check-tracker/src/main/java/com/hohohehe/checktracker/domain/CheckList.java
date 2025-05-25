@@ -1,5 +1,6 @@
 package com.hohohehe.checktracker.domain;
 
+import com.hohohehe.checktracker.dto.request.CheckListRequest;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,6 +29,13 @@ public class CheckList extends AuditingFields {
     public static CheckList of(String title) {
         CheckList checkList = new CheckList();
         checkList.setTitle(title);
+
+        return checkList;
+    }
+
+    public static CheckList of(CheckListRequest request) {
+        CheckList checkList = new CheckList();
+        checkList.setTitle(request.title());
 
         return checkList;
     }

@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 @Getter
 @ToString(callSuper = true)
-@Table
+@Table(uniqueConstraints = {@UniqueConstraint(name = "uq_check_list_id_date", columnNames = {"check_list_id", "check_date"})})
 @Entity
 public class CheckLog extends AuditingFields {
 
@@ -27,7 +27,7 @@ public class CheckLog extends AuditingFields {
     @Column
     private LocalDate checkDate;
 
-    private CheckLog() {
+    protected CheckLog() {
 
     }
 

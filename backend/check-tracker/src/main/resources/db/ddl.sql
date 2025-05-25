@@ -27,5 +27,6 @@ CREATE TABLE check_log(
     created_at DATETIME NOT NULL,
     created_by VARCHAR(50) NOT NULL,
     modified_at DATETIME,
-    modified_by VARCHAR(50)
+    modified_by VARCHAR(50),
+    UNIQUE (check_list_id, check_date)
 );

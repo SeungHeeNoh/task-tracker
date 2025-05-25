@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -29,11 +29,11 @@ class CheckLogRepositoryTest {
         CheckLog param = createCheckLog();
 
         // when
-        List<CheckLog> result = checkLogRepository.findByCheckList_CheckListIdAndCheckDate(param.getCheckList().getCheckListId(), param.getCheckDate());
+        Optional<CheckLog> result = checkLogRepository.findByCheckList_CheckListIdAndCheckDate(param.getCheckList().getCheckListId(), param.getCheckDate());
 
         // then
-        assertThat(result.size())
-                .isEqualTo(1);
+        assertThat(result.isPresent())
+                .isTrue();
     }
 
     @Test

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -25,6 +27,9 @@ public class CheckList extends AuditingFields {
     @Setter
     @Column(nullable = false)
     private String title;
+
+    @OneToMany(mappedBy = "checkList", cascade = CascadeType.ALL)
+    private List<CheckLog> checkLogs = new ArrayList<>();
 
     public static CheckList of(String title) {
         CheckList checkList = new CheckList();

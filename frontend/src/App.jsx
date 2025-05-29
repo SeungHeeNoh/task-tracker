@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getCheckLists } from './api/checkListApi';
+import { getCheckLists, releaseCheck, confirmCheck } from './api/checkListApi';
 import CheckListItem from './components/CheckListItem';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,6 +14,23 @@ function App() {
     getCheckLists().then(setCheckLists).catch(console.error);
   }, []);
 
+  const handleToggle = async (checkListId, isChecked) => {
+    const today = new Date().toISOString().split('T')[0];
+    let res;
+
+    if(isChecked) {
+      res = await releaseCheck(checkListId, today);
+    } else {
+      res = await confirmCheck(checkListId, today);
+    }
+
+    if(res?.message) {
+      alert(res.message);
+    }
+
+    const updated = await getCheckLists();
+    setCheckLists(updated);
+  };
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -21,10 +38,11 @@ function App() {
       {!checkLists || checkLists.length === 0 ? 
       (<p> 체크리스트가 없습니다.</p>) :
       (<ul>
-        {checkLists.map((list) => (
+        {checkLists.map((checkList) => (
           <CheckListItem
-            key={list.checkListId}
-            item={list}
+            key={checkList.checkListId}
+            checkList={checkList}
+            onClick = {() => handleToggle(checkList.checkListId, checkList.isChecked)}
           />
         ))}
       </ul>)}

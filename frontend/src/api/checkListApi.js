@@ -33,3 +33,16 @@ export const releaseCheck = async (checkListId, checkDate) => {
   if (!res.ok) throw new Error("알 수 없는 에러 발생.");
   return res.json();
 };
+
+export const registerCheckList = async(title) => {
+  const res = await fetch(`${API_BASE}/checklists`, {
+    method: 'POST',
+    headers: {'Content-Type' : 'application/json'},
+    body: JSON.stringify({
+      title: title
+    })
+  });
+
+  if (!res.ok) throw new Error("알 수 없는 에러 발생.");
+  return res.json();
+}

@@ -1,10 +1,10 @@
-import CheckListGroup from './components/CheckListGroup';
+import CheckListPage from './pages/CheckListPage';
 import Layout from './layouts/Layout';
 
 function App() {
 
   return (
-    <Layout children={<CheckListGroup />}/>
+    <Layout children={<CheckListPage />}/>
   );
 }
 

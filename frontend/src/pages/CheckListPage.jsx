@@ -12,6 +12,10 @@ export default function CheckListPage() {
 
     const[mode, setMode] = useState('list');    // mode : list | add
 
+    const handleRegisterSuccess = () => {
+        setMode('list');
+    };
+
     return (
         <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -20,7 +24,7 @@ export default function CheckListPage() {
                 { mode === 'add' && (<button onClick={() => setMode('list')} className="add-button">← 돌아가기</button>)}
             </div>
             { mode === 'list' && <CheckListGroup />}
-            { mode === 'add' && <CheckListForm />}
+            { mode === 'add' && <CheckListForm onSuccess={handleRegisterSuccess} />}
         </>
     );
 }

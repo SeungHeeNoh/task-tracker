@@ -2,6 +2,7 @@ package com.hohohehe.checktracker.contoller.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hohohehe.checktracker.config.MockServiceConfig;
+import com.hohohehe.checktracker.config.SecurityConfig;
 import com.hohohehe.checktracker.domain.CheckList;
 import com.hohohehe.checktracker.dto.v1.request.CheckListRequest;
 import com.hohohehe.checktracker.service.CheckListService;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,7 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import(MockServiceConfig.class)
+@Import({MockServiceConfig.class, SecurityConfig.class})
 @WebMvcTest(CheckListController.class)
 class CheckListControllerTest {
 
@@ -41,6 +43,7 @@ class CheckListControllerTest {
         this.checkListService = checkListService;
     }
 
+    @WithMockUser(username = "testUser")
     @Test
     void 체크리스트_조회_API_정상작동() throws Exception {
         // given
@@ -56,6 +59,7 @@ class CheckListControllerTest {
         then(checkListService).should().searchCheckList();
     }
 
+    @WithMockUser(username = "testUser")
     @Test
     void 체크리스트_생성_API_정상작동() throws Exception {
         // given

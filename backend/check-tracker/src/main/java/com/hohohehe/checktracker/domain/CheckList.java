@@ -1,6 +1,6 @@
 package com.hohohehe.checktracker.domain;
 
-import com.hohohehe.checktracker.dto.request.CheckListRequest;
+import com.hohohehe.checktracker.dto.v1.request.CheckListRequest;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

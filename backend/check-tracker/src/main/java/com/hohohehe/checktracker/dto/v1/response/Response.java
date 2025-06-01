@@ -1,6 +1,4 @@
-package com.hohohehe.checktracker.dto.response;
-
-import lombok.*;
+package com.hohohehe.checktracker.dto.v1.response;
 
 public record Response(
         String result,

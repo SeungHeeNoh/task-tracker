@@ -1,4 +1,4 @@
-package com.hohohehe.checktracker.dto.response;
+package com.hohohehe.checktracker.dto.v1.response;
 
 import com.hohohehe.checktracker.domain.CheckList;
 

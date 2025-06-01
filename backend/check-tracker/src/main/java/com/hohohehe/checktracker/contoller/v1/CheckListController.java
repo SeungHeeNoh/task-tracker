@@ -1,9 +1,9 @@
-package com.hohohehe.checktracker.contoller;
+package com.hohohehe.checktracker.contoller.v1;
 
 import com.hohohehe.checktracker.domain.CheckList;
-import com.hohohehe.checktracker.dto.request.CheckListRequest;
-import com.hohohehe.checktracker.dto.response.CheckListResponse;
-import com.hohohehe.checktracker.dto.response.Response;
+import com.hohohehe.checktracker.dto.v1.request.CheckListRequest;
+import com.hohohehe.checktracker.dto.v1.response.CheckListResponse;
+import com.hohohehe.checktracker.dto.v1.response.Response;
 import com.hohohehe.checktracker.service.CheckListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/checklists")
+@RequestMapping("/api/v1/checklists")
 public class CheckListController {
 
     private final CheckListService checkListService;

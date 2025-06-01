@@ -47,6 +47,7 @@
 # *.iml
 # *.ipr
 # Prevent all unnecessary IntelliJ project files
+**/.idea/
 **/.idea/compiler.xml
 **/.idea/gradle.xml
 **/.idea/misc.xml

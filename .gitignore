@@ -46,6 +46,14 @@
 # .idea/modules
 # *.iml
 # *.ipr
+# Prevent all unnecessary IntelliJ project files
+**/.idea/compiler.xml
+**/.idea/gradle.xml
+**/.idea/misc.xml
+**/.idea/modules.xml
+**/.idea/modules/
+**/.idea/*.iml
+*.iml
 
 # CMake
 cmake-build-*/

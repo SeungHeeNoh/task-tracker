@@ -1,7 +1,7 @@
-package com.hohohehe.checktracker.contoller;
+package com.hohohehe.checktracker.contoller.v1;
 
-import com.hohohehe.checktracker.dto.request.CheckLogRequest;
-import com.hohohehe.checktracker.dto.response.Response;
+import com.hohohehe.checktracker.dto.v1.request.CheckLogRequest;
+import com.hohohehe.checktracker.dto.v1.response.Response;
 import com.hohohehe.checktracker.service.CheckLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/checklogs")
+@RequestMapping("/api/v1/checklogs")
 public class CheckLogController {
 
     private final CheckLogService checkLogService;

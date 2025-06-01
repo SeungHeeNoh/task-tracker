@@ -1,8 +1,8 @@
-package com.hohohehe.checktracker.contoller;
+package com.hohohehe.checktracker.contoller.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hohohehe.checktracker.config.MockServiceConfig;
-import com.hohohehe.checktracker.dto.request.CheckLogRequest;
+import com.hohohehe.checktracker.dto.v1.request.CheckLogRequest;
 import com.hohohehe.checktracker.service.CheckLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class CheckLogControllerTest {
         willDoNothing().given(checkLogService).saveCheckLog(any(Long.class), any(LocalDate.class));
 
         // when & then
-        mvc.perform(post("/checklogs/confirm")
+        mvc.perform(post("/api/v1/checklogs/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(checkLogRequest)))
                 .andExpect(status().isOk())
@@ -67,7 +67,7 @@ class CheckLogControllerTest {
                 .given(checkLogService).saveCheckLog(any(Long.class), any(LocalDate.class));
 
         // when & then
-        mvc.perform(post("/checklogs/confirm")
+        mvc.perform(post("/api/v1/checklogs/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(checkLogRequest)))
                 .andExpect(status().isOk())
@@ -84,7 +84,7 @@ class CheckLogControllerTest {
         willDoNothing().given(checkLogService).deleteCheckLog(any(Long.class), any(LocalDate.class));
 
         // when & then
-        mvc.perform(post("/checklogs/release")
+        mvc.perform(post("/api/v1/checklogs/release")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(checkLogRequest)))
                 .andExpect(status().isOk())
@@ -101,7 +101,7 @@ class CheckLogControllerTest {
                 .given(checkLogService).deleteCheckLog(any(Long.class), any(LocalDate.class));
 
         // when & then
-        mvc.perform(post("/checklogs/release")
+        mvc.perform(post("/api/v1/checklogs/release")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(checkLogRequest)))
                 .andExpect(status().isOk())

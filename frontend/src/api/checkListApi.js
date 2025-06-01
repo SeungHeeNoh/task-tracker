@@ -1,13 +1,13 @@
-const API_BASE = 'http://localhost:8080';
+const API_BASE = 'http://localhost:8080/api/';
 
 export const getCheckLists = async () => {
-  const res = await fetch(`${API_BASE}/checklists`);
+  const res = await fetch(`${API_BASE}v1/checklists`);
   if (!res.ok) throw new Error('체크리스트 조회 실패');
   return res.json();
 };
 
 export const confirmCheck = async (checkListId, checkDate) => {
-  const res = await fetch(`${API_BASE}/checklogs/confirm`, {
+  const res = await fetch(`${API_BASE}v1/checklogs/confirm`, {
     method: 'POST',
     headers: {'Content-Type' : 'application/json'},
     body: JSON.stringify({
@@ -21,7 +21,7 @@ export const confirmCheck = async (checkListId, checkDate) => {
 }
 
 export const releaseCheck = async (checkListId, checkDate) => {
-  const res = await fetch(`${API_BASE}/checklogs/release`, {
+  const res = await fetch(`${API_BASE}v1/checklogs/release`, {
     method: 'POST',
     headers: {'Content-Type' : 'application/json'},
     body: JSON.stringify({
@@ -35,7 +35,7 @@ export const releaseCheck = async (checkListId, checkDate) => {
 };
 
 export const registerCheckList = async(title) => {
-  const res = await fetch(`${API_BASE}/checklists`, {
+  const res = await fetch(`${API_BASE}v1/checklists`, {
     method: 'POST',
     headers: {'Content-Type' : 'application/json'},
     body: JSON.stringify({

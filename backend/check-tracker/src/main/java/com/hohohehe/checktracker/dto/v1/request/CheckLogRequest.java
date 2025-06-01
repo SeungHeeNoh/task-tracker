@@ -1,4 +1,4 @@
-package com.hohohehe.checktracker.dto.request;
+package com.hohohehe.checktracker.dto.v1.request;
 
 import com.hohohehe.checktracker.domain.CheckLog;
 

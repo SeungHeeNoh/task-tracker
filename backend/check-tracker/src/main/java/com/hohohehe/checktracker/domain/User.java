@@ -29,6 +29,19 @@ public class User extends AuditingFields implements UserDetails, CredentialsCont
     @Column(nullable = false)
     private String password;
 
+    protected User() {
+
+    }
+
+    private User(String userId, String password) {
+        this.userId = userId;
+        this.password = password;
+    }
+
+    public static User of(String userId, String password) {
+        return new User(userId, password);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

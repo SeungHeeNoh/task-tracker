@@ -6,6 +6,7 @@ logging:
     com.hohohehe.checktracker: debug
     org.springframework.web.servlet: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
+    org.hibernate.orm.jdbc.bind: trace
 
 spring:
   application:

@@ -1,6 +1,7 @@
 package com.hohohehe.checktracker.config.jwt;
 
 import io.jsonwebtoken.JwtException;
+import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,15 +37,19 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         if(token != null && tokenProvider.validToken(token)) {
             try {
                 String userId = tokenProvider.getUserId(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                if(StringUtils.isNotEmpty(userId) && SecurityContextHolder.getContext().getAuthentication() == null ) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             } catch ( JwtException | IllegalArgumentException e ) {
                 log.warn("JWT token validation failed: {}", e.getMessage());
+                SecurityContextHolder.clearContext();
             }
         }
 

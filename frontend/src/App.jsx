@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import { Button } from './components/ui/Button'
 import { Input } from './components/ui/Input'
 import { ChecklistItem } from './components/ChecklistItem'
@@ -15,6 +15,7 @@ function App() {
       id: 1,
       text: "Buy groceries",
       completed: false,
+      dueDate: "Due in 1 day",
       creator: { name: "Sarah Johnson", avatarUrl: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?w=100&auto=format&fit=crop&q=60" }
     },
     {
@@ -28,6 +29,7 @@ function App() {
       id: 3,
       text: "Call dentist",
       completed: false,
+      dueDate: "Due in 3 days",
       creator: { name: "Alex Kim", avatarUrl: "https://images.unsplash.com/photo-1510947565940-a38e2443c426?w=100&auto=format&fit=crop&q=60" }
     },
   ])
@@ -51,7 +53,9 @@ function App() {
       id: Date.now(),
       text: inputValue,
       completed: false,
-      creator: currentUser
+      creator: currentUser,
+      // 임시로 랜덤하게 Due Date 설정 (데모용)
+      dueDate: Math.random() > 0.5 ? "Due in 2 days" : undefined
     }
     setItems([...items, newItem])
     setInputValue("") // 입력 필드 초기화
@@ -118,6 +122,10 @@ function App() {
             onKeyDown={handleKeyDown}
             className="text-base"
           />
+          <Button variant="outline" className="gap-2 text-gray-600 border-gray-200 hover:bg-gray-50">
+            <Calendar className="size-4" />
+            Due date
+          </Button>
           <Button onClick={handleAddItem} className="gap-2">
             <Plus className="h-5 w-5" />
             Add

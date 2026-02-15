@@ -2,7 +2,7 @@ import { Button } from "./ui/Button"
 import { Checkbox } from "./ui/Checkbox"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/Avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/Dialog"
-import { Trash2, CircleCheck, History, Clock } from "lucide-react"
+import { Trash2, CircleCheck, History, Clock, Calendar } from "lucide-react"
 import { cn } from "../lib/utils"
 
 /**
@@ -14,11 +14,12 @@ import { cn } from "../lib/utils"
  * @param {string} props.text - 할 일 텍스트
  * @param {boolean} props.completed - 완료 여부
  * @param {Object} props.creator - 작성자 정보 { name, avatarUrl }
+ * @param {string} [props.dueDate] - 마감 기한 (선택) e.g., "Due in 1 day"
  * @param {Object} [props.completedBy] - 완료자 정보 (선택) { name, avatarUrl, at }
  * @param {Function} props.onToggle - 완료 상태 변경 핸들러
  * @param {Function} props.onDelete - 아이템 삭제 핸들러
  */
-export function ChecklistItem({ id, text, completed, creator, completedBy, onToggle, onDelete }) {
+export function ChecklistItem({ id, text, completed, creator, dueDate, completedBy, onToggle, onDelete }) {
   return (
     <div className="relative rounded-xl border bg-white shadow-sm hover:shadow-md transition-shadow p-5 group">
       <div className="flex items-start gap-4">
@@ -31,15 +32,23 @@ export function ChecklistItem({ id, text, completed, creator, completedBy, onTog
         </div>
 
         <div className="flex-1 min-w-0">
-          <label
-            htmlFor={`item-${id}`}
-            className={cn(
-              "block cursor-pointer mb-3 text-base font-medium transition-colors",
-              completed ? "line-through text-gray-400" : "text-gray-900"
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <label
+              htmlFor={`item-${id}`}
+              className={cn(
+                "block cursor-pointer flex-1 text-base font-medium transition-colors",
+                completed ? "line-through text-gray-400" : "text-gray-900"
+              )}
+            >
+              {text}
+            </label>
+            {dueDate && !completed && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-orange-600 bg-orange-50 shrink-0">
+                <Calendar className="size-3" />
+                {dueDate}
+              </span>
             )}
-          >
-            {text}
-          </label>
+          </div>
 
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* 작성자 정보 */}

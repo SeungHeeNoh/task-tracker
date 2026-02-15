@@ -1,0 +1,128 @@
+<script>
+;(() => {
+  'use strict';
+
+  // 단일 전역 네임스페이스 노출
+  const NAMESPACE = 'MobileDeeplink';
+
+  // 내부 상태 (모듈 스코프)
+  let config = {
+    schemeUrl: 'ktpasslink20://requestMobileIdAuth?mrhstBhfDspQr=mrhstBhfDspQr',
+    androidStoreUrl: 'https://play.google.com/store/apps/details?id=com.lguplus.smartotp',
+    iosFallbackUrl: 'https://apps.apple.com/kr/app/pass-by-u/id1147394645',
+    waitMs: 2000,               // 감시 시간 (ms)
+    strictMobileOnly: true      // 모바일 외 환경 차단
+  };
+
+  let rafId = null;
+  let visHandlerBound = false;
+  let hidden = false;
+  let startTs = 0;
+  let iframeEl = null;
+
+  const ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '').toLowerCase();
+  const isAndroid = /android/.test(ua);
+  const isIOS = /(iphone|ipad|ipod)/.test(ua);
+  const isMobile = isAndroid || isIOS;
+
+  function ensureIframe() {
+    if (iframeEl && document.body.contains(iframeEl)) return iframeEl;
+    iframeEl = document.createElement('iframe');
+    iframeEl.id = 'mdl__deeplink_iframe';
+    iframeEl.name = 'mdl__deeplink_iframe';
+    iframeEl.style.display = 'none';
+    document.body.appendChild(iframeEl);
+    return iframeEl;
+  }
+
+  function onVisibilityChange() {
+    if (document.visibilityState === 'hidden') hidden = true;
+  }
+
+  function cleanup() {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    if (visHandlerBound) {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      visHandlerBound = false;
+    }
+    hidden = false;
+    startTs = 0;
+  }
+
+  function openIOS() {
+    try { window.location.href = config.schemeUrl; } catch (_) {}
+    setTimeout(() => {
+      // 앱이 열리면 보통 hidden으로 전환되어 이 블록에 도달하지 않음
+      if (document.visibilityState === 'visible' && config.iosFallbackUrl) {
+        window.location.href = config.iosFallbackUrl;
+      }
+    }, config.waitMs);
+  }
+
+  function loopRAF(now) {
+    if (hidden) {
+      cleanup(); // 앱 실행 성공
+      return;
+    }
+    if (now - startTs >= config.waitMs) {
+      cleanup();
+      if (config.androidStoreUrl) window.location.href = config.androidStoreUrl;
+      return;
+    }
+    rafId = requestAnimationFrame(loopRAF);
+  }
+
+  function openAndroid() {
+    ensureIframe();
+    // 클릭 직후 동기 흐름에서 호출 (user-activation 유지)
+    try { iframeEl.src = config.schemeUrl; } catch (_) {}
+
+    hidden = false;
+    startTs = performance.now();
+    if (!visHandlerBound) {
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      visHandlerBound = true;
+    }
+    rafId = requestAnimationFrame(loopRAF);
+  }
+
+  function open() {
+    if (isIOS) {
+      openIOS();
+      return true;
+    }
+    if (isAndroid) {
+      openAndroid();
+      return true;
+    }
+    return false;
+  }
+
+  function destroy() {
+    cleanup();
+    if (iframeEl && iframeEl.parentNode) {
+      iframeEl.parentNode.removeChild(iframeEl);
+      iframeEl = null;
+    }
+  }
+
+  // 이미 존재하면 덮어쓰지 않도록 방어
+  if (!window[NAMESPACE]) {
+    window[NAMESPACE] = {
+      // 공개 API
+      open,            // 사용자가 클릭 핸들러에서 호출
+      destroy,         // 리소스 정리
+      // 정보 조회용
+      isAndroid: () => isAndroid,
+      isIOS: () => isIOS,
+      isMobile: () => isMobile
+    };
+  }
+})();
+</script>
+<button onclick="MobileDeeplink.open();">
+  앱 열기
+</button>

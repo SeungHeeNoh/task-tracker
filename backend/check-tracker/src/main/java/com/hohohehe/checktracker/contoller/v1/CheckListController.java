@@ -30,7 +30,7 @@ public class CheckListController {
 
     @PostMapping
     public ResponseEntity<Response> addCheckList(@RequestBody CheckListRequest request) {
-        checkListService.saveCheckList(CheckList.of(request));
+        checkListService.saveCheckList(CheckList.ofCreateRequest(request));
 
         return ResponseEntity.ok(Response.of("SC"));
     }

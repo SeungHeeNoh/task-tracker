@@ -12,18 +12,14 @@ spring:
   application:
     name: check-tracker
   datasource:
-    url: jdbc:mysql://localhost:3300/checkTracker?serverTimezone=Asia/Seoul
-    username: checkTracker
-    password: checkTracker
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        default_batch_fetch_size: 100
-
+    hikari:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://localhost:3300/checkTracker?serverTimezone=Asia/Seoul
+      username: checkTracker
+      password: checkTracker
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      max-lifetime: 1800000
 jwt:
   issuer: temp                                     #추후 github secrets로 대체
   secret_key: temp-temp-temp-temp-temp-temp-temp   #추후 github secrets로 대체

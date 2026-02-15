@@ -2,7 +2,7 @@ package com.hohohehe.checktracker.service;
 
 import com.hohohehe.checktracker.domain.User;
 import com.hohohehe.checktracker.dto.v1.UserDto;
-import com.hohohehe.checktracker.repository.UserRepository;
+import com.hohohehe.checktracker.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,14 +15,13 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserMapper userMapper;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -35,15 +34,15 @@ class UserServiceImplTest {
         // given
         String userId = "test";
         UserDto param = createUserDto(userId);
-        given(userRepository.existsById(any(String.class))).willReturn(false);
-        given(userRepository.save(any(User.class))).willReturn(any(User.class));
+        given(userMapper.findByUserId(any(String.class))).willReturn(Optional.empty());
+        willDoNothing().given(userMapper).save(any(User.class));
 
         // when
         userService.saveUser(param);
 
         // then
-        then(userRepository).should().existsById(any(String.class));
-        then(userRepository).should().save(any(User.class));
+        then(userMapper).should().findByUserId(userId);
+        verify(userMapper, times(1)).save(any(User.class));
     }
 
     @Test
@@ -51,39 +50,39 @@ class UserServiceImplTest {
         // given
         String userId = "nsh";
         UserDto param = createUserDto(userId);
-        given(userRepository.existsById(any(String.class))).willReturn(true);
+        given(userMapper.findByUserId(any(String.class))).willReturn(Optional.of(createUser("nsh")));
 
         // when && then
         assertThatThrownBy(() -> userService.saveUser(param))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("이미 존재하는 아이디입니다.");
-        then(userRepository).should().existsById(any(String.class));
+        then(userMapper).should().findByUserId(any(String.class));
     }
 
     @Test
     void givenUserId_whenExistUser_thenReturningUser() {
         // given
         String userId = "nsh";
-        given(userRepository.findByUserId(any(String.class))).willReturn(Optional.of(createUser(userId)));
+        given(userMapper.findByUserId(any(String.class))).willReturn(Optional.of(createUser(userId)));
 
         // when && then
         userService.loadUserByUsername(userId);
 
         // then
-        then(userRepository).should().findByUserId(any(String.class));
+        then(userMapper).should().findByUserId(any(String.class));
     }
 
     @Test
     void givenUserId_whenNoneExistUser_thenThrowingUsernameNotFoundException() {
         // given
         String userId = "test";
-        given(userRepository.findByUserId(any(String.class))).willReturn(Optional.empty());
+        given(userMapper.findByUserId(any(String.class))).willReturn(Optional.empty());
 
         // when && then
         assertThatThrownBy(() -> userService.loadUserByUsername(userId))
                 .isInstanceOf(UsernameNotFoundException.class)
                 .hasMessage("해당 유저 없음: " + userId);
-        then(userRepository).should().findByUserId(any(String.class));
+        then(userMapper).should().findByUserId(any(String.class));
     }
 
     // fixture

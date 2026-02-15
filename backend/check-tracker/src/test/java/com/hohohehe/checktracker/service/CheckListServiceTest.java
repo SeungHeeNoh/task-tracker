@@ -1,7 +1,8 @@
 package com.hohohehe.checktracker.service;
 
 import com.hohohehe.checktracker.domain.CheckList;
-import com.hohohehe.checktracker.repository.CheckListRepository;
+import com.hohohehe.checktracker.dto.v1.CheckListDTO;
+import com.hohohehe.checktracker.mapper.CheckListMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,7 +22,7 @@ import static org.mockito.BDDMockito.then;
 class CheckListServiceTest {
 
     @Mock
-    private CheckListRepository checkListRepository;
+    private CheckListMapper checkListMapper;
 
     @InjectMocks
     private CheckListServiceImpl checkListService;
@@ -29,22 +30,22 @@ class CheckListServiceTest {
     @Test
     void givenNoting_whenSearchCheckList_returningChecklists() {
         // given
-        given(checkListRepository.findAll()).willReturn(List.of(new CheckList()));
+        given(checkListMapper.findAll()).willReturn(List.of(new CheckListDTO()));
 
         // when
-        List<CheckList> result = checkListService.searchCheckList();
+        List<CheckListDTO> result = checkListService.searchCheckList();
 
         // then
         assertThat(result)
                 .isNotNull();
-        then(checkListRepository).should().findAll();
+        then(checkListMapper).should().findAll();
     }
 
     @Test
     void givenTestData_whenSaveCheckList_InsertCheckList() {
         // given
         CheckList expectedCheckList = createCheckList(1L);
-        given(checkListRepository.save(any(CheckList.class))).willReturn(expectedCheckList);
+        given(checkListMapper.save(any(CheckList.class))).willReturn(expectedCheckList);
         CheckList checkList = CheckList.of("test");
 
         // when
@@ -53,7 +54,7 @@ class CheckListServiceTest {
         // then
         assertThat(insertResult)
                 .isEqualTo(expectedCheckList);
-        then(checkListRepository).should().save(checkList);
+        then(checkListMapper).should().save(checkList);
     }
 
     // fixture

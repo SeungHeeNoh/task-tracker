@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hohohehe.checktracker.mapper.CheckLogMapper">
+
+    <resultMap id="CheckLogResultMap" type="com.hohohehe.checktracker.domain.CheckLog">
+        <id property="checkLogId" column="check_log_id"/>
+        <result property="checkListId" column="check_list_id"/>
+        <result property="checkDate" column="check_date"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="modifiedAt" column="modified_at"/>
+        <result property="modifiedBy" column="modified_by"/>
+    </resultMap>
+
+    <select id="findByCheckList_CheckListIdAndCheckDate" parameterType="long" resultMap="CheckLogResultMap">
+        SELECT
+            check_log_id
+        FROM check_log
+        WHERE check_list_id = #{checkListId}
+        AND check_date = #{checkDate}
+    </select>
+
+    <insert id="save" parameterType="com.hohohehe.checktracker.domain.CheckLog">
+        INSERT INTO check_log
+            (
+             check_list_id,
+             check_date,
+             created_at,
+             created_by,
+             modified_at,
+             modified_by
+            )
+        VALUE (
+              #{checkListId},
+              #{checkDate},
+              now(),
+              #{createdBy},
+              now(),
+              #{modifiedBy}
+            )
+    </insert>
+
+    <delete id="delete" parameterType="long">
+        DELETE
+        FROM check_log
+        WHERE check_log_id = #{checkLogId}
+    </delete>
+</mapper>

@@ -1,6 +1,6 @@
 package com.hohohehe.checktracker.dto.v1.response;
 
-import com.hohohehe.checktracker.domain.CheckList;
+import com.hohohehe.checktracker.dto.v1.CheckListDTO;
 
 import java.time.format.DateTimeFormatter;
 
@@ -11,11 +11,11 @@ public record CheckListResponse(
         String createdAt
 ) {
 
-    public static CheckListResponse from(final CheckList checkList) {
+    public static CheckListResponse from(final CheckListDTO checkList) {
         return new CheckListResponse(
                 checkList.getCheckListId(),
                 checkList.getTitle(),
-                checkList.getCreatedBy(),
+                checkList.getCreateUserName(),
                 checkList.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         );
     }

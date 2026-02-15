@@ -1,9 +1,5 @@
 package com.hohohehe.checktracker.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,18 +12,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+@Setter
 @Getter
 @ToString(callSuper = true)
-@Table(name = "users")
-@Entity
 public class User extends AuditingFields implements UserDetails, CredentialsContainer {
 
-    @Id
+    private Long userSeq;
     private String userId;
-
-    @Setter
-    @Column(nullable = false)
+    private String userName;
     private String password;
+    private Long groupSeq;
 
     protected User() {
 

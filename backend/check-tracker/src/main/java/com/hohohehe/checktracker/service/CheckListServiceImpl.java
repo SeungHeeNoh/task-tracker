@@ -1,8 +1,8 @@
 package com.hohohehe.checktracker.service;
 
 import com.hohohehe.checktracker.domain.CheckList;
-import com.hohohehe.checktracker.repository.CheckListRepository;
-
+import com.hohohehe.checktracker.dto.v1.CheckListDTO;
+import com.hohohehe.checktracker.mapper.CheckListMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,16 +14,16 @@ import java.util.List;
 @Service
 public class CheckListServiceImpl implements CheckListService {
 
-    private final CheckListRepository checkListRepository;
+    private final CheckListMapper checkListMapper;
 
     @Transactional(readOnly = true)
     @Override
-    public List<CheckList> searchCheckList() {
-        return checkListRepository.findAll();
+    public List<CheckListDTO> searchCheckList() {
+        return checkListMapper.findAll();
     }
 
     @Override
     public CheckList saveCheckList(CheckList checkList) {
-        return checkListRepository.save(checkList);
+        return checkListMapper.save(checkList);
     }
 }

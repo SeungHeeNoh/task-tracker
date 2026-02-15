@@ -1,7 +1,7 @@
 package com.hohohehe.checktracker.domain;
 
+import com.hohohehe.checktracker.common.SecurityContext;
 import com.hohohehe.checktracker.dto.v1.request.CheckListRequest;
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -10,25 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Setter
 @Getter
 @ToString(callSuper = true)
-@Table(indexes = {
-        @Index(columnList = "title"),
-        @Index(columnList = "createdAt"),
-        @Index(columnList = "createdBy")
-})
-@Entity
 public class CheckList extends AuditingFields {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
     private Long checkListId;
-
-    @Setter
-    @Column(nullable = false)
     private String title;
-
-    @OneToMany(mappedBy = "checkList", cascade = CascadeType.ALL)
     private List<CheckLog> checkLogs = new ArrayList<>();
 
     public static CheckList of(String title) {
@@ -38,9 +26,12 @@ public class CheckList extends AuditingFields {
         return checkList;
     }
 
-    public static CheckList of(CheckListRequest request) {
+    public static CheckList ofCreateRequest(CheckListRequest request) {
         CheckList checkList = new CheckList();
+        User currentUser = SecurityContext.getCurrentUser();
+
         checkList.setTitle(request.title());
+        checkList.setCreatedBy(currentUser.getUserSeq());
 
         return checkList;
     }

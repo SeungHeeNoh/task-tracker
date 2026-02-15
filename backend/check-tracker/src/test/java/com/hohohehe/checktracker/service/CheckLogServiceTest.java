@@ -2,8 +2,8 @@ package com.hohohehe.checktracker.service;
 
 import com.hohohehe.checktracker.domain.CheckList;
 import com.hohohehe.checktracker.domain.CheckLog;
-import com.hohohehe.checktracker.repository.CheckListRepository;
-import com.hohohehe.checktracker.repository.CheckLogRepository;
+import com.hohohehe.checktracker.mapper.CheckListMapper;
+import com.hohohehe.checktracker.mapper.CheckLogMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,16 +16,17 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CheckLogServiceTest {
 
     @Mock
-    private CheckLogRepository checkLogRepository;
+    private CheckLogMapper checkLogMapper;
 
     @Mock
-    private CheckListRepository checkListRepository;
+    private CheckListMapper checkListMapper;
 
     @InjectMocks
     private CheckLogServiceImpl checkLogService;
@@ -36,18 +37,17 @@ class CheckLogServiceTest {
         Long checkListId = 1L;
         LocalDate checkDate = LocalDate.now();
         CheckList checkList = createCheckList(checkListId);
-        CheckLog param = createCheckLog(checkList);
-        given(checkLogRepository.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.empty());
-        given(checkListRepository.findById(any(Long.class))).willReturn(Optional.of(checkList));
-        given(checkLogRepository.save(any(CheckLog.class))).willReturn(param);
+        given(checkLogMapper.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.empty());
+        given(checkListMapper.findById(any(Long.class))).willReturn(Optional.of(checkList));
+        willDoNothing().given(checkLogMapper).save(any(CheckLog.class));
 
         // when
         checkLogService.saveCheckLog(checkListId, checkDate);
 
         // then
-        then(checkLogRepository).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
-        then(checkListRepository).should().findById(any(Long.class));
-        then(checkLogRepository).should().save(any(CheckLog.class));
+        then(checkLogMapper).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
+        then(checkListMapper).should().findById(any(Long.class));
+        then(checkLogMapper).should().save(any(CheckLog.class));
     }
 
     @Test
@@ -56,13 +56,13 @@ class CheckLogServiceTest {
         Long checkListId = 1L;
         LocalDate checkDate = LocalDate.now();
         CheckLog param = createCheckLog(checkListId);
-        given(checkLogRepository.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.of(param));
+        given(checkLogMapper.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.of(param));
 
         // when & then
         assertThatThrownBy(() -> checkLogService.saveCheckLog(checkListId, checkDate))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("이미 체크된 항목입니다.");
-        then(checkLogRepository).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
+        then(checkLogMapper).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
     }
 
     @Test
@@ -71,15 +71,15 @@ class CheckLogServiceTest {
         Long checkListId = 1L;
         LocalDate checkDate = LocalDate.now();
         CheckLog param = createCheckLog(checkListId);
-        given(checkLogRepository.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.of(param));
-        willDoNothing().given(checkLogRepository).delete(any(CheckLog.class));
+        given(checkLogMapper.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.of(param));
+        willDoNothing().given(checkLogMapper).delete(anyLong());
 
         // when
         checkLogService.deleteCheckLog(checkListId, checkDate);
 
         // then
-        then(checkLogRepository).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
-        then(checkLogRepository).should().delete(any(CheckLog.class));
+        then(checkLogMapper).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
+        then(checkLogMapper).should().delete(anyLong());
     }
 
     @Test
@@ -87,13 +87,13 @@ class CheckLogServiceTest {
         // given
         Long checkListId = 1L;
         LocalDate checkDate = LocalDate.now();
-        given(checkLogRepository.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.empty());
+        given(checkLogMapper.findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class))).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> checkLogService.deleteCheckLog(checkListId, checkDate))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("체크된 적 없는 항목입니다.");
-        then(checkLogRepository).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
+        then(checkLogMapper).should().findByCheckList_CheckListIdAndCheckDate(any(Long.class), any(LocalDate.class));
     }
 
     // fixture

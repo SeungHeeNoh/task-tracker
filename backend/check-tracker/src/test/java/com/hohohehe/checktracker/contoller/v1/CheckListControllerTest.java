@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hohohehe.checktracker.config.jwt.TokenProvider;
 import com.hohohehe.checktracker.domain.User;
 import com.hohohehe.checktracker.dto.v1.request.CheckListRequest;
-import com.hohohehe.checktracker.repository.UserRepository;
+import com.hohohehe.checktracker.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ class CheckListControllerTest {
 
     private final MockMvc mvc;
     private final ObjectMapper mapper;
-    private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final TokenProvider tokenProvider;
     private String accessToken;
 
@@ -37,17 +37,17 @@ class CheckListControllerTest {
             @Autowired MockMvc mvc,
             @Autowired ObjectMapper mapper,
             @Autowired TokenProvider tokenProvider,
-            @Autowired UserRepository userRepository
+            @Autowired UserMapper userMapper
     ) {
         this.mvc = mvc;
         this.mapper = mapper;
         this.tokenProvider = tokenProvider;
-        this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     @BeforeEach
     void setUp() throws Exception {
-        Optional<User> user = userRepository.findByUserId("nsh");
+        Optional<User> user = userMapper.findByUserId("nsh");
 
         accessToken = tokenProvider.generateAccessToken(user
                 .orElseThrow(() -> new RuntimeException("User not found"))

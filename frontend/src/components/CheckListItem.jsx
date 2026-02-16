@@ -2,162 +2,221 @@ import { Button } from "./ui/Button"
 import { Checkbox } from "./ui/Checkbox"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/Avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/Dialog"
-import { Trash2, CircleCheck, History, Clock, Calendar } from "lucide-react"
-import { cn } from "../lib/utils"
+import { Trash2, CheckCircle2, History, Clock, Calendar, ExternalLink } from "lucide-react"
 
 /**
  * 개별 체크리스트 아이템 컴포넌트
- * 카드 형태의 레이아웃으로 변경되었습니다.
- * 
+ *
  * @param {Object} props
- * @param {number} props.id - 아이템 고유 ID
+ * @param {string} props.id - 아이템 고유 ID
  * @param {string} props.text - 할 일 텍스트
  * @param {boolean} props.completed - 완료 여부
- * @param {Object} props.creator - 작성자 정보 { name, avatarUrl }
- * @param {string} [props.dueDate] - 마감 기한 (선택) e.g., "Due in 1 day"
- * @param {Object} [props.completedBy] - 완료자 정보 (선택) { name, avatarUrl, at }
+ * @param {string} props.creatorName - 작성자 이름
+ * @param {string} props.creatorAvatar - 작성자 아바타 URL
+ * @param {string} [props.completerName] - 완료자 이름
+ * @param {string} [props.completerAvatar] - 완료자 아바타 URL
+ * @param {string} [props.completedDate] - 완료 날짜 텍스트
+ * @param {string} [props.dueDate] - 마감 기한 (ISO Date string)
+ * @param {Array} props.history - 히스토리 이벤트 배열
  * @param {Function} props.onToggle - 완료 상태 변경 핸들러
  * @param {Function} props.onDelete - 아이템 삭제 핸들러
  */
-export function ChecklistItem({ id, text, completed, creator, dueDate, completedBy, onToggle, onDelete }) {
-  return (
-    <div className="relative rounded-xl border bg-white shadow-sm hover:shadow-md transition-shadow p-5 group">
-      <div className="flex items-start gap-4">
-        <div className="pt-1">
-          <Checkbox
-            id={`item-${id}`}
-            checked={completed}
-            onCheckedChange={() => onToggle(id)}
-          />
-        </div>
+export function ChecklistItem({
+    id,
+    text,
+    completed,
+    creatorName,
+    creatorAvatar,
+    completerName,
+    completerAvatar,
+    completedDate,
+    dueDate,
+    history,
+    onToggle,
+    onDelete
+}) {
+    const getEventIcon = (type) => {
+        switch (type) {
+            case "created":
+                return <Clock className="size-4 text-blue-500" />;
+            case "completed":
+                return <CheckCircle2 className="size-4 text-green-500" />;
+            case "uncompleted":
+                return <Clock className="size-4 text-orange-500" />;
+            default:
+                return <Clock className="size-4 text-gray-500" />;
+        }
+    };
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <label
-              htmlFor={`item-${id}`}
-              className={cn(
-                "block cursor-pointer flex-1 text-base font-medium transition-colors",
-                completed ? "line-through text-gray-400" : "text-gray-900"
-              )}
-            >
-              {text}
-            </label>
-            {dueDate && !completed && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-orange-600 bg-orange-50 shrink-0">
-                <Calendar className="size-3" />
-                {dueDate}
-              </span>
-            )}
-          </div>
+    const getEventText = (type) => {
+        switch (type) {
+            case "created":
+                return "created this item";
+            case "completed":
+                return "completed this item";
+            case "uncompleted":
+                return "marked as incomplete";
+            default:
+                return "updated this item";
+        }
+    };
 
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            {/* 작성자 정보 */}
-            <div className="flex items-center gap-2">
-              <Avatar>
-                <AvatarImage src={creator.avatarUrl} alt={creator.name} />
-                <AvatarFallback>{creator.name[0]}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-gray-500">Created by {creator.name}</span>
-            </div>
+    const getDueDateStatus = () => {
+        if (!dueDate || completed) return null;
 
-            {/* 완료 정보 (완료된 경우에만 표시) */}
-            {completed && completedBy && (
-              <div className="flex items-center gap-2">
-                <CircleCheck className="size-4 text-green-500" />
-                <Avatar>
-                  <AvatarImage src={completedBy.avatarUrl} alt={completedBy.name} />
-                  <AvatarFallback>{completedBy.name[0]}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-gray-500">
-                  Completed by {completedBy.name}
-                  <span className="text-gray-400"> • {completedBy.at}</span>
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+        // ISO 문자열을 이용하여 날짜 비교
+        const due = new Date(dueDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        due.setHours(0, 0, 0, 0);
 
-        <div className="flex gap-1 shrink-0">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-              >
-                <History className="size-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg max-w-md">
-              <DialogHeader>
-                <DialogTitle>Checklist History</DialogTitle>
-                <DialogDescription>
-                  View the complete timeline of events for this checklist item.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="mt-4">
-                <div className="relative">
-                  {/* Vertical line through timeline */}
-                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+        const diffTime = due.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                  <div className="space-y-6">
-                    {/* Event: Completed (Conditional) */}
-                    {completed && completedBy && (
-                      <div className="relative flex gap-3">
-                        <div className="relative z-10 flex items-center justify-center size-8 rounded-full bg-white border-2 border-gray-200">
-                          <CircleCheck className="size-4 text-green-500" />
-                        </div>
-                        <div className="flex-1 pt-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Avatar className="size-6">
-                              <AvatarImage src={completedBy.avatarUrl} alt={completedBy.name} />
-                              <AvatarFallback>{completedBy.name[0]}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">
-                              <span className="font-medium">{completedBy.name}</span>{" "}
-                              <span className="text-gray-600">completed this item</span>
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-400">{completedBy.at} at 3:45 PM</p>
-                        </div>
-                      </div>
-                    )}
+        if (diffDays < 0) {
+            return { color: "text-red-600 bg-red-50", label: "Overdue" };
+        } else if (diffDays === 0) {
+            return { color: "text-orange-600 bg-orange-50", label: "Due Today" };
+        } else if (diffDays <= 3) {
+            return { color: "text-orange-600 bg-orange-50", label: `Due in ${diffDays} day${diffDays > 1 ? 's' : ''}` };
+        } else {
+            return { color: "text-blue-600 bg-blue-50", label: `Due ${new Date(dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` };
+        }
+    };
 
-                    {/* Event: Created */}
-                    <div className="relative flex gap-3">
-                      <div className="relative z-10 flex items-center justify-center size-8 rounded-full bg-white border-2 border-gray-200">
-                        <Clock className="size-4 text-blue-500" />
-                      </div>
-                      <div className="flex-1 pt-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Avatar className="size-6">
-                            <AvatarImage src={creator.avatarUrl} alt={creator.name} />
-                            <AvatarFallback>{creator.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">
-                            <span className="font-medium">{creator.name}</span>{" "}
-                            <span className="text-gray-600">created this item</span>
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-400">Feb 13, 2026 at 10:00 AM</p>
-                      </div>
-                    </div>
-                  </div>
+    const dueDateStatus = getDueDateStatus();
+
+    return (
+        <div className="relative rounded-xl border bg-white shadow-sm hover:shadow-md transition-shadow p-5 group">
+            <div className="flex items-start gap-4">
+                <div className="pt-1">
+                    <Checkbox
+                        checked={completed}
+                        onCheckedChange={() => onToggle(id)}
+                        id={`item-${id}`}
+                    />
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50"
-            onClick={() => onDelete(id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                        <label
+                            htmlFor={`item-${id}`}
+                            className={`block cursor-pointer flex-1 ${completed ? "line-through text-gray-400" : "text-gray-900"
+                                }`}
+                        >
+                            {text}
+                        </label>
+                        {dueDateStatus && (
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${dueDateStatus.color}`}>
+                                <Calendar className="size-3" />
+                                {dueDateStatus.label}
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                            <Avatar className="size-7">
+                                <AvatarImage src={creatorAvatar} alt={creatorName} />
+                                <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                                    {creatorName ? creatorName.split(' ').map(n => n[0]).join('') : '?'}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm text-gray-500">Created by {creatorName}</span>
+                        </div>
+
+                        {completed && completerName && (
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 className="size-4 text-green-500" />
+                                <Avatar className="size-7">
+                                    <AvatarImage src={completerAvatar} alt={completerName} />
+                                    <AvatarFallback className="bg-green-100 text-green-600 text-xs">
+                                        {completerName.split(' ').map(n => n[0]).join('')}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm text-gray-500">
+                                    Completed by {completerName}
+                                    {completedDate && <span className="text-gray-400"> • {completedDate}</span>}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex gap-1 shrink-0">
+                    {/* Router Link omitted as react-router is not installed. Keeping button for UI consistency. */}
+                    <button
+                        disabled
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground size-9 opacity-0 group-hover:opacity-100 cursor-not-allowed"
+                        title="External Link (Disabled)"
+                    >
+                        <ExternalLink className="size-4 text-gray-500" />
+                    </button>
+
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <button
+                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground size-9 opacity-0 group-hover:opacity-100"
+                            >
+                                <History className="size-4 text-blue-500" />
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Checklist History</DialogTitle>
+                                <DialogDescription>
+                                    View the complete timeline of events for this checklist item.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="mt-4">
+                                <div className="relative">
+                                    {/* Timeline line */}
+                                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+
+                                    <div className="space-y-6">
+                                        {history && history.length > 0 ? (
+                                            history.map((event) => (
+                                                <div key={event.id} className="relative flex gap-3">
+                                                    <div className="relative z-10 flex items-center justify-center size-8 rounded-full bg-white border-2 border-gray-200">
+                                                        {getEventIcon(event.type)}
+                                                    </div>
+                                                    <div className="flex-1 pt-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <Avatar className="size-6">
+                                                                <AvatarImage src={event.userAvatar} alt={event.userName} />
+                                                                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                                                                    {event.userName ? event.userName.split(' ').map(n => n[0]).join('') : '?'}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <span className="text-sm">
+                                                                <span className="font-medium">{event.userName}</span>
+                                                                {' '}
+                                                                <span className="text-gray-600">{getEventText(event.type)}</span>
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-400">{event.timestamp}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-sm text-gray-500 pl-8">No history events.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete(id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                        <Trash2 className="size-4 text-red-500" />
+                    </Button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    );
 }

@@ -1,4 +1,4 @@
-package com.hohohehe.checktracker.config;
+package com.hohohehe.tasktracker.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -15,7 +15,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import javax.sql.DataSource;
 
 @Configuration
-@MapperScan(basePackages = "com.hohohehe.checktracker.mapper")
+@MapperScan(basePackages = "com.hohohehe.tasktracker.mapper")
 public class MybatisConfig {
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource.hikari")

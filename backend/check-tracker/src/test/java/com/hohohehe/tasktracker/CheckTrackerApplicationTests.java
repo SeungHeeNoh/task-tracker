@@ -1,4 +1,4 @@
-package com.hohohehe.checktracker;
+package com.hohohehe.tasktracker;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

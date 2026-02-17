@@ -35,7 +35,7 @@ public class Task {
                 .build();
     }
 
-    public static Task from(Long taskId, ManageTaskRequest addTaskRequest) {
+    public static Task of(Long taskId, ManageTaskRequest addTaskRequest) {
         return Task
                 .builder()
                 .taskId(taskId)
@@ -43,6 +43,14 @@ public class Task {
                 .duedate(LocalDate.parse(addTaskRequest.duedate()))
                 .groupSeq(addTaskRequest.groupSeq())
                 .createdBy(SecurityContext.getCurrentUser().getUserSeq())
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
+
+    public static Task of(Long taskId) {
+        return Task
+                .builder()
+                .taskId(taskId)
                 .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
                 .build();
     }

@@ -87,4 +87,19 @@
         </set>
         WHERE task_id = #{taskId}
     </update>
+
+
+    <update id="deleteTask" parameterType="com.hohohehe.tasktracker.model.entity.Task">
+        UPDATE task
+        SET
+        deleted_yn = 'Y',
+        modified_at = NOW(),
+        modified_by = #{task.modifiedBy}
+        WHERE task_id = #{task.taskId}
+        AND deleted_yn = 'N'
+        AND group_seq in
+        <foreach collection="groupSeqs" item="seq" open="(" separator="," close=")">
+            #{seq}
+        </foreach>
+    </update>
 </mapper>

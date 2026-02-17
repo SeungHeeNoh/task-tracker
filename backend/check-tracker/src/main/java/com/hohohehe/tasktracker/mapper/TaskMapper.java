@@ -14,4 +14,6 @@ public interface TaskMapper {
     void addTask(Task task);
 
     void modifyTask(Task task);
+
+    Integer deleteTask(@Param("task")Task task, @Param("groupSeqs")List<Long> groupSeqs);
 }

@@ -2,14 +2,14 @@ package com.hohohehe.tasktracker.controller.v1;
 
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.model.dto.TaskInfo;
+import com.hohohehe.tasktracker.model.dto.request.AddTaskRequest;
 import com.hohohehe.tasktracker.model.dto.request.TaskListRequest;
+import com.hohohehe.tasktracker.model.entity.Task;
 import com.hohohehe.tasktracker.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,6 +30,17 @@ public class TaskController {
             }
 
             return taskService.getTaskList(taskListRequest.viewMode());
+        } catch (Exception e) {
+            return CommonResponse.fail(e.getMessage());
+        }
+    }
+
+    @PostMapping
+    public CommonResponse<TaskInfo> addTask(@RequestBody AddTaskRequest addTaskRequest) {
+        try {
+            addTaskRequest.checkValidation();
+
+            return taskService.addTask(Task.from(addTaskRequest));
         } catch (Exception e) {
             return CommonResponse.fail(e.getMessage());
         }

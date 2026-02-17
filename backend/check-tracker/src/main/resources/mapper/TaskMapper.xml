@@ -44,4 +44,29 @@
         AND base.rn = 1
         ORDER BY base.duedate
     </select>
+
+    <insert id="addTask" useGeneratedKeys="true" keyProperty="taskId" keyColumn="task_id" parameterType="com.hohohehe.tasktracker.model.entity.Task">
+        INSERT INTO task
+        (
+         title,
+         duedate,
+         deleted_yn,
+         created_at,
+         created_by,
+         modified_at,
+         modified_by,
+         group_seq
+        )
+        VALUE
+        (
+         #{title},
+         #{duedate},
+         'N',
+         NOW(),
+         #{createdBy},
+         NOW(),
+         #{modifiedBy},
+         #{groupSeq}
+        )
+    </insert>
 </mapper>

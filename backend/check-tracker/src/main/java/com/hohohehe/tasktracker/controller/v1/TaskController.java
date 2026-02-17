@@ -6,6 +6,7 @@ import com.hohohehe.tasktracker.model.dto.request.TaskListRequest;
 import com.hohohehe.tasktracker.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,9 +24,14 @@ public class TaskController {
     @GetMapping
     public CommonResponse<List<TaskInfo>> getTasks(TaskListRequest taskListRequest) {
         try {
+
+            if(!StringUtils.hasLength(taskListRequest.viewMode())) {
+                throw new IllegalArgumentException("viewMode는 필수값입니다.");
+            }
+
             return taskService.getTaskList(taskListRequest.viewMode());
         } catch (Exception e) {
-            return CommonResponse.fail("데이터를 불러오는 중 오류가 발생했습니다.");
+            return CommonResponse.fail(e.getMessage());
         }
     }
 

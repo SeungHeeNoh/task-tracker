@@ -1,13 +1,6 @@
 server:
   port: 8080
 
-logging:
-  level:
-    com.hohohehe.checktracker: debug
-    org.springframework.web.servlet: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace
-    org.hibernate.orm.jdbc.bind: trace
-
 spring:
   application:
     name: check-tracker

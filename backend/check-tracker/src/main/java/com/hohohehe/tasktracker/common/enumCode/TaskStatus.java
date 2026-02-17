@@ -15,4 +15,11 @@ public enum TaskStatus {
     public String getCode() {
         return code;
     }
+
+    public TaskStatus getNextStatus() {
+        return switch (this) {
+            case CREATED, UNCOMPLETED -> COMPLETED;
+            case COMPLETED -> UNCOMPLETED;
+        };
+    }
 }

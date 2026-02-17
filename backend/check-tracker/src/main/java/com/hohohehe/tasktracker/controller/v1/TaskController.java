@@ -65,4 +65,13 @@ public class TaskController {
             return CommonResponse.fail(e.getMessage());
         }
     }
+
+    @PostMapping("/{taskId}/status")
+    public CommonResponse<Void> changeStatus(@PathVariable Long taskId) {
+        try {
+            return taskService.changeStatus(taskId);
+        } catch (Exception e) {
+            return CommonResponse.fail(e.getMessage());
+        }
+    }
 }

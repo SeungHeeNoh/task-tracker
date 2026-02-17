@@ -88,7 +88,6 @@
         WHERE task_id = #{taskId}
     </update>
 
-
     <update id="deleteTask" parameterType="com.hohohehe.tasktracker.model.entity.Task">
         UPDATE task
         SET
@@ -102,4 +101,25 @@
             #{seq}
         </foreach>
     </update>
+
+    <select id="getTaskDetail" resultType="com.hohohehe.tasktracker.model.dto.TaskInfo">
+        SELECT
+            task_id,
+            task_status
+        FROM (
+            SELECT
+                t.task_id,
+                tl.task_status
+            FROM task t
+            LEFT OUTER JOIN task_log tl on t.task_id = tl.task_id
+            WHERE t.task_id = #{taskId}
+            AND t.deleted_yn = 'N'
+            AND group_seq in
+            <foreach collection="groupSeqs" item="seq" open="(" separator="," close=")">
+                #{seq}
+            </foreach>
+            ORDER BY tl.created_at DESC
+        ) base
+        LIMIT 1
+    </select>
 </mapper>

@@ -3,6 +3,8 @@ package com.hohohehe.tasktracker.common;
 import com.hohohehe.tasktracker.model.entity.Groups;
 import com.hohohehe.tasktracker.model.entity.Users;
 
+import java.util.List;
+
 public class SecurityContext {
 
     public static Users getCurrentUser() {
@@ -24,5 +26,12 @@ public class SecurityContext {
         users.getGroup().add(groups);
 
         return users;
+    }
+
+    public static List<Long> getCurrentUserGroupSeq() {
+        return SecurityContext.getCurrentUser().getGroup()
+                .stream()
+                .map(Groups::getGroupSeq)
+                .toList();
     }
 }

@@ -67,22 +67,38 @@ public class TaskService {
 
     public CommonResponse<Void> deleteTask(Task task) {
         try {
-            Integer deleteCount = taskMapper.deleteTask(task,
-                    SecurityContext.getCurrentUser().getGroup()
-                            .stream()
-                            .map(Groups::getGroupSeq)
-                            .toList()
-            );
-            
+            Integer deleteCount = taskMapper.deleteTask(task, SecurityContext.getCurrentUserGroupSeq());
+
             if (deleteCount == 0) {
                 throw new IllegalArgumentException("삭제 권한이 없거나 이미 처리된 요청입니다.");
             }
 
             return CommonResponse.success("할 일을 삭제하는 데 성공했습니다.");
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
 
             throw new SystemException(e, "할 일을 삭제하는 중 오류가 발생했습니다.");
+        }
+    }
+
+    public CommonResponse<Void> changeStatus(Long taskId) {
+        try {
+            TaskInfo currentTask = taskMapper.getTaskDetail(taskId, SecurityContext.getCurrentUserGroupSeq());
+            if (currentTask == null) {
+                throw new IllegalArgumentException("권한이 없거나 존재하지 않는 할 일입니다.");
+            }
+
+            taskLogMapper.addTaskLog(TaskLog.of(taskId, currentTask.getTaskStatus().getNextStatus()));
+
+            return CommonResponse.success("할 일 상태를 변경하는 데 성공했습니다.");
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+
+            throw new SystemException(e, "할 일 상태를 변경하는 데 오류가 발생했습니다.");
         }
     }
 }

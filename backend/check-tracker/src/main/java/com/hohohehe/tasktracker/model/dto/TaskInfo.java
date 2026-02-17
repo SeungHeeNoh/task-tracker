@@ -1,5 +1,6 @@
 package com.hohohehe.tasktracker.model.dto;
 
+import com.hohohehe.tasktracker.common.enumCode.TaskStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,7 +13,7 @@ public class TaskInfo {
     private Long taskId;
     private String title;
     private String duedate;
-    private String taskStatus;
+    private TaskStatus taskStatus;
     private String creator;
     private String modifier;
 

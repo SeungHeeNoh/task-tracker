@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hohohehe.tasktracker.mapper.TaskMapper">
+    <select id="getTaskList" resultType="com.hohohehe.tasktracker.model.dto.TaskInfo">
+        SELECT
+            base.task_id,
+            base.title,
+            base.duedate,
+            base.task_status,
+            u1.user_name as creator,
+            u2.user_name as modifier
+        FROM (
+            SELECT
+                t.task_id,
+                t.title,
+                t.duedate,
+                t.created_by,
+                t.modified_by,
+                t.group_seq,
+                tl.task_status,
+                ROW_NUMBER() OVER (PARTITION BY t.task_id ORDER BY tl.created_at DESC) AS rn
+            FROM task t
+            LEFT OUTER JOIN task_log tl on t.task_id = tl.task_id
+            WHERE t.deleted_yn = 'N'
+            <choose>
+                <when test="viewMode == 'daily'">
+                    AND DATE(t.duedate) = CURDATE()
+                </when>
+                <when test="viewMode == 'weekly'">
+                    AND t.duedate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                </when>
+                <when test="viewMode == 'monthly'">
+                    AND MONTH(t.duedate) = MONTH(CURDATE())
+                    AND YEAR(t.duedate) = YEAR(CURDATE())
+                </when>
+            </choose>
+        ) base
+        LEFT OUTER JOIN users u1 on base.created_by = u1.user_seq
+        LEFT OUTER JOIN users u2 on base.modified_by = u2.user_seq
+        WHERE base.group_seq in
+        <foreach collection="groupSeqs" item="seq" open="(" separator="," close=")">
+            #{seq}
+        </foreach>
+        AND base.rn = 1
+        ORDER BY base.duedate
+    </select>
+</mapper>

@@ -1,4 +1,4 @@
-package com.hohohehe.checktracker.config;
+package com.hohohehe.tasktracker.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

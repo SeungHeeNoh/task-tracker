@@ -1,4 +1,4 @@
-package com.hohohehe.checktracker;
+package com.hohohehe.tasktracker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -52,4 +52,15 @@ public class TaskService {
             throw new SystemException(e, "할 일을 추가하는 중 오류가 발생했습니다.");
         }
     }
+
+    public CommonResponse<TaskInfo> modifyTask(Task task) {
+        try {
+            taskMapper.modifyTask(task);
+            return CommonResponse.success("할 일을 수정하는 데 성공했습니다.");
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+
+            throw new SystemException(e, "할 일을 수정하는 중 오류가 발생했습니다.");
+        }
+    }
 }

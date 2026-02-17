@@ -2,7 +2,7 @@ package com.hohohehe.tasktracker.controller.v1;
 
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.model.dto.TaskInfo;
-import com.hohohehe.tasktracker.model.dto.request.AddTaskRequest;
+import com.hohohehe.tasktracker.model.dto.request.ManageTaskRequest;
 import com.hohohehe.tasktracker.model.dto.request.TaskListRequest;
 import com.hohohehe.tasktracker.model.entity.Task;
 import com.hohohehe.tasktracker.service.TaskService;
@@ -36,11 +36,22 @@ public class TaskController {
     }
 
     @PostMapping
-    public CommonResponse<TaskInfo> addTask(@RequestBody AddTaskRequest addTaskRequest) {
+    public CommonResponse<TaskInfo> addTask(@RequestBody ManageTaskRequest addTaskRequest) {
         try {
             addTaskRequest.checkValidation();
 
             return taskService.addTask(Task.from(addTaskRequest));
+        } catch (Exception e) {
+            return CommonResponse.fail(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{taskId}")
+    public CommonResponse<TaskInfo> modifyTask(@PathVariable Long taskId, @RequestBody ManageTaskRequest modifyTaskRequest) {
+        try {
+            modifyTaskRequest.checkValidation();
+
+            return taskService.modifyTask(Task.from(taskId, modifyTaskRequest));
         } catch (Exception e) {
             return CommonResponse.fail(e.getMessage());
         }

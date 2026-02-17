@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
-public record AddTaskRequest(
+public record ManageTaskRequest(
         String title,
         Long groupSeq,
         String duedate

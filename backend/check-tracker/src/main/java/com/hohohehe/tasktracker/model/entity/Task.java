@@ -2,7 +2,7 @@ package com.hohohehe.tasktracker.model.entity;
 
 
 import com.hohohehe.tasktracker.common.SecurityContext;
-import com.hohohehe.tasktracker.model.dto.request.AddTaskRequest;
+import com.hohohehe.tasktracker.model.dto.request.ManageTaskRequest;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -24,9 +24,21 @@ public class Task {
     private LocalDateTime modifiedAt;
     private Long modifiedBy;
 
-    public static Task from(AddTaskRequest addTaskRequest) {
+    public static Task from(ManageTaskRequest addTaskRequest) {
         return Task
                 .builder()
+                .title(addTaskRequest.title())
+                .duedate(LocalDate.parse(addTaskRequest.duedate()))
+                .groupSeq(addTaskRequest.groupSeq())
+                .createdBy(SecurityContext.getCurrentUser().getUserSeq())
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
+
+    public static Task from(Long taskId, ManageTaskRequest addTaskRequest) {
+        return Task
+                .builder()
+                .taskId(taskId)
                 .title(addTaskRequest.title())
                 .duedate(LocalDate.parse(addTaskRequest.duedate()))
                 .groupSeq(addTaskRequest.groupSeq())

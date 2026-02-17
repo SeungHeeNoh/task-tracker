@@ -12,4 +12,6 @@ public interface TaskMapper {
     List<TaskInfo> getTaskList(@Param("groupSeqs") List<Long> groupSeqs, @Param("viewMode") String viewMode);
 
     void addTask(Task task);
+
+    void modifyTask(Task task);
 }

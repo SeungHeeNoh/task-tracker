@@ -69,4 +69,22 @@
          #{groupSeq}
         )
     </insert>
+
+    <update id="modifyTask" parameterType="com.hohohehe.tasktracker.model.entity.Task">
+        UPDATE task
+        <set>
+            <if test="title != null and title != ''">
+                title = #{title},
+            </if>
+            <if test="duedate != null">
+                duedate = #{duedate},
+            </if>
+            <if test="groupSeq != null and groupSeq != ''">
+                group_seq = #{groupSeq},
+            </if>
+            modified_at = NOW(),
+            modified_by = #{modifiedBy}
+        </set>
+        WHERE task_id = #{taskId}
+    </update>
 </mapper>

@@ -1,11 +1,9 @@
 package com.hohohehe.tasktracker.controller.v1;
 
-import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.model.dto.TaskInfo;
 import com.hohohehe.tasktracker.model.dto.request.ManageTaskRequest;
 import com.hohohehe.tasktracker.model.dto.request.TaskListRequest;
-import com.hohohehe.tasktracker.model.entity.Groups;
 import com.hohohehe.tasktracker.model.entity.Task;
 import com.hohohehe.tasktracker.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +12,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @RequestMapping("/api/v1/tasks")
@@ -39,7 +36,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public CommonResponse<TaskInfo> addTask(@RequestBody ManageTaskRequest addTaskRequest) {
+    public CommonResponse<Void> addTask(@RequestBody ManageTaskRequest addTaskRequest) {
         try {
             addTaskRequest.checkValidation();
 
@@ -50,7 +47,7 @@ public class TaskController {
     }
 
     @PostMapping("/{taskId}")
-    public CommonResponse<TaskInfo> modifyTask(@PathVariable Long taskId, @RequestBody ManageTaskRequest modifyTaskRequest) {
+    public CommonResponse<Void> modifyTask(@PathVariable Long taskId, @RequestBody ManageTaskRequest modifyTaskRequest) {
         try {
             modifyTaskRequest.checkValidation();
 
@@ -61,7 +58,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{taskId}")
-    public CommonResponse<TaskInfo> deleteTask(@PathVariable Long taskId) {
+    public CommonResponse<Void> deleteTask(@PathVariable Long taskId) {
         try {
             return taskService.deleteTask(Task.of(taskId));
         } catch (Exception e) {

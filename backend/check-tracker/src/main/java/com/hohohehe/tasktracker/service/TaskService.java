@@ -42,7 +42,7 @@ public class TaskService {
         }
     }
 
-    public CommonResponse<TaskInfo> addTask(Task task) {
+    public CommonResponse<Void> addTask(Task task) {
         try {
             taskMapper.addTask(task);
             taskLogMapper.addTaskLog(TaskLog.of(task.getTaskId(), TaskStatus.CREATED));
@@ -54,7 +54,7 @@ public class TaskService {
         }
     }
 
-    public CommonResponse<TaskInfo> modifyTask(Task task) {
+    public CommonResponse<Void> modifyTask(Task task) {
         try {
             taskMapper.modifyTask(task);
             return CommonResponse.success("할 일을 수정하는 데 성공했습니다.");
@@ -65,7 +65,7 @@ public class TaskService {
         }
     }
 
-    public CommonResponse<TaskInfo> deleteTask(Task task) {
+    public CommonResponse<Void> deleteTask(Task task) {
         try {
             Integer deleteCount = taskMapper.deleteTask(task,
                     SecurityContext.getCurrentUser().getGroup()

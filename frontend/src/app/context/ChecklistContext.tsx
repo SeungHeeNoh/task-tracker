@@ -21,6 +21,9 @@ interface ChecklistContextType {
   toggleItem: (id: string) => void;
   deleteItem: (id: string) => void;
   getItemById: (id: string) => ChecklistItemType | undefined;
+  fetchTasks: (viewMode: string) => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
   currentUser: {
     name: string;
     avatar: string;
@@ -30,103 +33,42 @@ interface ChecklistContextType {
 const ChecklistContext = createContext<ChecklistContextType | undefined>(undefined);
 
 export function ChecklistProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<ChecklistItemType[]>([
-    { 
-      id: "1", 
-      text: "Buy groceries", 
-      completed: false,
-      creatorName: "Sarah Johnson",
-      creatorAvatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080",
-      dueDate: "2026-02-16",
-      history: [
-        {
-          id: "h1",
-          type: "created",
-          userName: "Sarah Johnson",
-          userAvatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080",
-          timestamp: "Feb 15, 2026 at 9:30 AM"
-        }
-      ]
-    },
-    { 
-      id: "2", 
-      text: "Finish project report", 
-      completed: true,
-      creatorName: "Michael Chen",
-      creatorAvatar: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtYW4lMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzEwOTI4OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      completerName: "Emily Rodriguez",
-      completerAvatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHdvbWFuJTIwaGVhZHNob3R8ZW58MXx8fHwxNzcxMTAyNTEyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      completedDate: "Feb 14, 2026",
-      dueDate: "2026-02-14",
-      history: [
-        {
-          id: "h3",
-          type: "completed",
-          userName: "Emily Rodriguez",
-          userAvatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHdvbWFuJTIwaGVhZHNob3R8ZW58MXx8fHwxNzcxMTAyNTEyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-          timestamp: "Feb 14, 2026 at 3:45 PM"
-        },
-        {
-          id: "h2",
-          type: "created",
-          userName: "Michael Chen",
-          userAvatar: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtYW4lMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzEwOTI4OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-          timestamp: "Feb 13, 2026 at 10:00 AM"
-        }
-      ]
-    },
-    { 
-      id: "3", 
-      text: "Call dentist", 
-      completed: false,
-      creatorName: "Alex Kim",
-      creatorAvatar: "https://images.unsplash.com/photo-1510947565940-a38e2443c426?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3VuZyUyMHByb2Zlc3Npb25hbCUyMHBlcnNvbnxlbnwxfHx8fDE3NzEwNzI3MjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      dueDate: "2026-02-18",
-      history: [
-        {
-          id: "h4",
-          type: "created",
-          userName: "Alex Kim",
-          userAvatar: "https://images.unsplash.com/photo-1510947565940-a38e2443c426?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3VuZyUyMHByb2Zlc3Npb25hbCUyMHBlcnNvbnxlbnwxfHx8fDE3NzEwNzI3MjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-          timestamp: "Feb 14, 2026 at 11:20 AM"
-        }
-      ]
-    },
-    { 
-      id: "4", 
-      text: "Team meeting", 
-      completed: false,
-      creatorName: "Sarah Johnson",
-      creatorAvatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080",
-      dueDate: "2026-02-15",
-      history: [
-        {
-          id: "h5",
-          type: "created",
-          userName: "Sarah Johnson",
-          userAvatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080",
-          timestamp: "Feb 14, 2026 at 2:00 PM"
-        }
-      ]
-    },
-    { 
-      id: "5", 
-      text: "Review quarterly reports", 
-      completed: false,
-      creatorName: "Michael Chen",
-      creatorAvatar: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtYW4lMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzEwOTI4OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      dueDate: "2026-02-28",
-      history: [
-        {
-          id: "h6",
-          type: "created",
-          userName: "Michael Chen",
-          userAvatar: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtYW4lMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzEwOTI4OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-          timestamp: "Feb 15, 2026 at 8:00 AM"
-        }
-      ]
-    },
-  ]);
+  const [items, setItems] = useState<ChecklistItemType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTasks = async (viewMode: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/v1/tasks?viewMode=${viewMode}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        const mappedItems = (result.data || []).map((task: any) => ({
+          id: String(task.taskId),
+          text: task.title,
+          completed: task.taskStatus === 'COMPLETED',
+          dueDate: task.duedate, // Keep API format, parsing handled in UI
+          creatorName: task.creator,
+          creatorAvatar: "https://github.com/shadcn.png", // Default
+          history: [],
+        }));
+        setItems(mappedItems);
+      } else {
+        console.warn("API returned non-success status:", result);
+        setError(result.message || "Failed to fetch tasks");
+      }
+    } catch (e: any) {
+      console.error("Failed to fetch tasks:", e);
+      setError(e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const currentUser = {
     name: "Sarah Johnson",
@@ -135,14 +77,14 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
 
   const addItem = (text: string, dueDate?: string) => {
     const now = new Date();
-    const timestamp = now.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    }) + ' at ' + now.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
+    const timestamp = now.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }) + ' at ' + now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
 
     const newItem: ChecklistItemType = {
@@ -169,25 +111,25 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
     setItems(items.map(item => {
       if (item.id === id) {
         const now = new Date();
-        const timestamp = now.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric' 
-        }) + ' at ' + now.toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit', 
-          hour12: true 
+        const timestamp = now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }) + ' at ' + now.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
         });
 
         const updatedItem = { ...item, completed: !item.completed };
-        
+
         if (updatedItem.completed) {
           updatedItem.completerName = currentUser.name;
           updatedItem.completerAvatar = currentUser.avatar;
-          updatedItem.completedDate = new Date().toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
+          updatedItem.completedDate = new Date().toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
           });
           updatedItem.history = [
             {
@@ -229,15 +171,18 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ChecklistContext.Provider 
-      value={{ 
-        items, 
-        setItems, 
-        addItem, 
-        toggleItem, 
-        deleteItem, 
+    <ChecklistContext.Provider
+      value={{
+        items,
+        setItems,
+        addItem,
+        toggleItem,
+        deleteItem,
         getItemById,
-        currentUser 
+        fetchTasks,
+        isLoading,
+        error,
+        currentUser
       }}
     >
       {children}

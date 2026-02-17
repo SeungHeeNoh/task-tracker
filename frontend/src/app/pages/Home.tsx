@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useChecklist } from "../context/ChecklistContext";
 import { ChecklistItem } from "../components/ChecklistItem";
 import { Button } from "../components/ui/button";
@@ -10,10 +10,14 @@ import { Plus, Calendar, CalendarDays, CalendarRange, CalendarClock } from "luci
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, isSameDay, addDays, parseISO } from "date-fns";
 
 export default function Home() {
-  const { items, addItem, toggleItem, deleteItem } = useChecklist();
+  const { items, addItem, toggleItem, deleteItem, fetchTasks, isLoading, error } = useChecklist();
   const [inputValue, setInputValue] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [viewMode, setViewMode] = useState<string>("weekly");
+
+  useEffect(() => {
+    fetchTasks(viewMode);
+  }, [viewMode]);
 
   const handleAddItem = () => {
     if (inputValue.trim()) {
@@ -37,14 +41,14 @@ export default function Home() {
       for (let i = 0; i < 7; i++) {
         const date = addDays(today, i);
         const dateKey = format(date, 'yyyy-MM-dd');
-        groups[dateKey] = items.filter(item => 
+        groups[dateKey] = items.filter(item =>
           item.dueDate && isSameDay(parseISO(item.dueDate), date)
         );
       }
     } else if (viewMode === "weekly") {
       const weekStart = startOfWeek(today, { weekStartsOn: 0 });
       const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
-      
+
       groups["This Week"] = items.filter(item => {
         if (!item.dueDate) return false;
         const dueDate = parseISO(item.dueDate);
@@ -67,7 +71,7 @@ export default function Home() {
     } else if (viewMode === "monthly") {
       const monthStart = startOfMonth(today);
       const monthEnd = endOfMonth(today);
-      
+
       groups["This Month"] = items.filter(item => {
         if (!item.dueDate) return false;
         const dueDate = parseISO(item.dueDate);
@@ -182,13 +186,13 @@ export default function Home() {
                   <span className="text-2xl">✨</span>
                 </div>
               </div>
-              
+
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {viewMode === "daily" && "No tasks for the next 7 days"}
                 {viewMode === "weekly" && "All clear this week!"}
                 {viewMode === "monthly" && "No tasks this month"}
               </h3>
-              
+
               <p className="text-gray-500 text-center max-w-md mb-6">
                 {viewMode === "daily" && "You have no upcoming tasks in the next week. Add a task with a due date to see it here."}
                 {viewMode === "weekly" && "You don't have any tasks scheduled for this week or next. Enjoy your free time or add new tasks to stay organized."}
@@ -204,8 +208,8 @@ export default function Home() {
                   Add New Task
                 </Button>
                 {viewMode !== "monthly" && (
-                  <Button 
-                    onClick={() => setViewMode("monthly")} 
+                  <Button
+                    onClick={() => setViewMode("monthly")}
                     variant="outline"
                   >
                     View Monthly
@@ -216,7 +220,7 @@ export default function Home() {
           ) : (
             Object.entries(groupedItems).map(([groupName, groupItems]) => {
               if (groupItems.length === 0) return null;
-              
+
               let dateLabel = groupName;
               if (viewMode === "daily" && groupName.match(/^\d{4}-\d{2}-\d{2}$/)) {
                 const date = parseISO(groupName);

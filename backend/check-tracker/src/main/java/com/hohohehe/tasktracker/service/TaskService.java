@@ -6,6 +6,7 @@ import com.hohohehe.tasktracker.common.exception.SystemException;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.mapper.TaskLogMapper;
 import com.hohohehe.tasktracker.mapper.TaskMapper;
+import com.hohohehe.tasktracker.model.dto.TaskDetail;
 import com.hohohehe.tasktracker.model.dto.TaskInfo;
 import com.hohohehe.tasktracker.model.entity.Groups;
 import com.hohohehe.tasktracker.model.entity.Task;
@@ -85,7 +86,7 @@ public class TaskService {
 
     public CommonResponse<Void> changeStatus(Long taskId) {
         try {
-            TaskInfo currentTask = taskMapper.getTaskDetail(taskId, SecurityContext.getCurrentUserGroupSeq());
+            TaskInfo currentTask = taskMapper.getTaskStatus(taskId, SecurityContext.getCurrentUserGroupSeq());
             if (currentTask == null) {
                 throw new IllegalArgumentException("권한이 없거나 존재하지 않는 할 일입니다.");
             }
@@ -99,6 +100,24 @@ public class TaskService {
             log.error(e.getMessage(), e);
 
             throw new SystemException(e, "할 일 상태를 변경하는 데 오류가 발생했습니다.");
+        }
+    }
+
+    public CommonResponse<TaskDetail> getTaskDetail(Long taskId) {
+        try {
+            TaskDetail currentTask = taskMapper.getTaskDetail(taskId, SecurityContext.getCurrentUserGroupSeq());
+
+            if (currentTask == null) {
+                throw new IllegalArgumentException("권한이 없거나 존재하지 않는 할 일입니다.");
+            }
+
+            return CommonResponse.success("할 일 상태를 조회하는 데 성공했습니다.", currentTask);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+
+            throw new SystemException(e, "할 일 상태를 조회하는 데 오류가 발생했습니다.");
         }
     }
 }

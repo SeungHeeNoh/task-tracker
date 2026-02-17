@@ -1,5 +1,6 @@
 package com.hohohehe.tasktracker.mapper;
 
+import com.hohohehe.tasktracker.model.dto.TaskDetail;
 import com.hohohehe.tasktracker.model.dto.TaskInfo;
 import com.hohohehe.tasktracker.model.entity.Task;
 import org.apache.ibatis.annotations.Mapper;
@@ -17,5 +18,7 @@ public interface TaskMapper {
 
     Integer deleteTask(@Param("task")Task task, @Param("groupSeqs")List<Long> groupSeqs);
 
-    TaskInfo getTaskDetail(@Param("taskId")Long taskId, @Param("groupSeqs")List<Long> groupSeqs);
+    TaskInfo getTaskStatus(@Param("taskId")Long taskId, @Param("groupSeqs")List<Long> groupSeqs);
+
+    TaskDetail getTaskDetail(@Param("taskId")Long taskId, @Param("groupSeqs")List<Long> groupSeqs);
 }

@@ -1,6 +1,7 @@
 package com.hohohehe.tasktracker.controller.v1;
 
 import com.hohohehe.tasktracker.common.response.CommonResponse;
+import com.hohohehe.tasktracker.model.dto.TaskDetail;
 import com.hohohehe.tasktracker.model.dto.TaskInfo;
 import com.hohohehe.tasktracker.model.dto.request.ManageTaskRequest;
 import com.hohohehe.tasktracker.model.dto.request.TaskListRequest;
@@ -70,6 +71,15 @@ public class TaskController {
     public CommonResponse<Void> changeStatus(@PathVariable Long taskId) {
         try {
             return taskService.changeStatus(taskId);
+        } catch (Exception e) {
+            return CommonResponse.fail(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{taskId}/logs")
+    public CommonResponse<TaskDetail> getTaskDetail(@PathVariable Long taskId) {
+        try {
+            return taskService.getTaskDetail(taskId);
         } catch (Exception e) {
             return CommonResponse.fail(e.getMessage());
         }

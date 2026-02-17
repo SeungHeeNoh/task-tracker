@@ -16,6 +16,7 @@ public class SecurityContext {
 //        return (User) authentication.getPrincipal();
 
         Users users = new Users();
+        users.setUserSeq(1L);
         users.setUserId("nsh");
 
         Groups groups = new Groups();

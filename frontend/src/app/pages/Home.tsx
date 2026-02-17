@@ -5,14 +5,17 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Calendar as CalendarComponent } from "../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Plus, Calendar, CalendarDays, CalendarRange, CalendarClock } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, isSameDay, addDays, parseISO } from "date-fns";
+import { Group } from "../context/ChecklistContext";
 
 export default function Home() {
-  const { items, addItem, toggleItem, deleteItem, fetchTasks, isLoading, error } = useChecklist();
+  const { items, addItem, updateItem, toggleItem, deleteItem, groups, fetchTasks, isLoading, error } = useChecklist();
   const [inputValue, setInputValue] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedGroup, setSelectedGroup] = useState<Group | undefined>(groups[0]);
   const [viewMode, setViewMode] = useState<string>("weekly");
 
   useEffect(() => {
@@ -20,10 +23,11 @@ export default function Home() {
   }, [viewMode]);
 
   const handleAddItem = () => {
-    if (inputValue.trim()) {
-      addItem(inputValue.trim(), selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined);
+    if (inputValue.trim() && selectedGroup) {
+      addItem(inputValue.trim(), selectedGroup, selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined);
       setInputValue("");
       setSelectedDate(undefined);
+      setSelectedGroup(groups[0]);
     }
   };
 
@@ -120,6 +124,40 @@ export default function Home() {
         </div>
 
         <div className="flex gap-2 mb-6">
+          <Select value={selectedGroup?.id} onValueChange={(value) => {
+            const group = groups.find(g => g.id === value);
+            setSelectedGroup(group);
+          }}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select group">
+                {selectedGroup && (
+                  <div className="flex items-center gap-2">
+                    <span>{selectedGroup.icon}</span>
+                    <span className="truncate">
+                      {selectedGroup.name.length > 15
+                        ? selectedGroup.name.substring(0, 15) + '...'
+                        : selectedGroup.name}
+                    </span>
+                  </div>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {groups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  <div className="flex items-center gap-2">
+                    <span>{group.icon}</span>
+                    <span>
+                      {group.name.length > 15
+                        ? group.name.substring(0, 15) + '...'
+                        : group.name}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Input
             type="text"
             placeholder="Add a new item..."
@@ -128,6 +166,7 @@ export default function Home() {
             onKeyPress={handleKeyPress}
             className="flex-1"
           />
+
           <Popover>
             <PopoverTrigger asChild>
               <button
@@ -146,6 +185,7 @@ export default function Home() {
               />
             </PopoverContent>
           </Popover>
+
           <Button onClick={handleAddItem}>
             <Plus className="size-5" />
             Add
@@ -256,9 +296,12 @@ export default function Home() {
                         completerAvatar={item.completerAvatar}
                         completedDate={item.completedDate}
                         dueDate={item.dueDate}
+                        group={item.group}
                         history={item.history}
                         onToggle={toggleItem}
                         onDelete={deleteItem}
+                        onUpdate={updateItem}
+                        availableGroups={groups}
                       />
                     ))}
                   </div>

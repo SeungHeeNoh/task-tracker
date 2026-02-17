@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router";
 import { useChecklist } from "../context/ChecklistContext";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import { ArrowLeft, Calendar, CheckCircle2, Clock, User, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Clock, User, Trash2, Tag } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 export default function TaskDetail() {
@@ -182,6 +182,24 @@ export default function TaskDetail() {
                   <p className="font-medium text-gray-900 mt-1">
                     {format(parseISO(item.dueDate), "EEEE, MMMM d, yyyy")}
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* Group Info */}
+            {item.group && (
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                <div className="p-2 bg-indigo-100 rounded-full">
+                  <Tag className="size-5 text-indigo-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500">Group</p>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium border ${item.group.color}`}>
+                      <span>{item.group.icon}</span>
+                      {item.group.name}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}

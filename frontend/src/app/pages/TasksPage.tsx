@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { ChecklistItem } from "../components/ChecklistItem";
 
 export default function TasksPage() {
-  const { items, toggleItem, deleteItem } = useChecklist();
+  const { items, toggleItem, deleteItem, updateItem, groups } = useChecklist();
 
   const activeTasks = items.filter(item => !item.completed);
   const completedTasks = items.filter(item => item.completed);
@@ -41,9 +41,12 @@ export default function TasksPage() {
                           completerAvatar={item.completerAvatar}
                           completedDate={item.completedDate}
                           dueDate={item.dueDate}
+                          group={item.group}
                           history={item.history}
                           onToggle={toggleItem}
                           onDelete={deleteItem}
+                          onUpdate={updateItem}
+                          availableGroups={groups}
                         />
                       </Link>
                     ))}
@@ -67,9 +70,12 @@ export default function TasksPage() {
                           completerAvatar={item.completerAvatar}
                           completedDate={item.completedDate}
                           dueDate={item.dueDate}
+                          group={item.group}
                           history={item.history}
                           onToggle={toggleItem}
                           onDelete={deleteItem}
+                          onUpdate={updateItem}
+                          availableGroups={groups}
                         />
                       </Link>
                     ))}

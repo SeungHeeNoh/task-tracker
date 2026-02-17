@@ -1,6 +1,24 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { HistoryEvent } from "../components/ChecklistItem";
 
+export interface Group {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+}
+
+export const predefinedGroups: Group[] = [
+  { id: "work", name: "Work", color: "bg-blue-100 text-blue-700 border-blue-200", icon: "💼" },
+  { id: "personal", name: "Personal", color: "bg-green-100 text-green-700 border-green-200", icon: "🏠" },
+  { id: "shopping", name: "Shopping", color: "bg-purple-100 text-purple-700 border-purple-200", icon: "🛒" },
+  { id: "health", name: "Health", color: "bg-red-100 text-red-700 border-red-200", icon: "❤️" },
+  { id: "finance", name: "Finance", color: "bg-yellow-100 text-yellow-700 border-yellow-200", icon: "💰" },
+  { id: "family", name: "Family", color: "bg-pink-100 text-pink-700 border-pink-200", icon: "👨‍👩‍👧‍👦" },
+  { id: "education", name: "Education", color: "bg-indigo-100 text-indigo-700 border-indigo-200", icon: "📚" },
+  { id: "other", name: "Other", color: "bg-gray-100 text-gray-700 border-gray-200", icon: "📌" },
+];
+
 export interface ChecklistItemType {
   id: string;
   text: string;
@@ -11,19 +29,22 @@ export interface ChecklistItemType {
   completerAvatar?: string;
   completedDate?: string;
   dueDate?: string;
+  group: Group;
   history: HistoryEvent[];
 }
 
 interface ChecklistContextType {
   items: ChecklistItemType[];
   setItems: (items: ChecklistItemType[]) => void;
-  addItem: (text: string, dueDate?: string) => void;
+  addItem: (text: string, group: Group, dueDate?: string) => void;
+  updateItem: (id: string, text: string, group: Group, dueDate?: string) => void;
   toggleItem: (id: string) => void;
   deleteItem: (id: string) => void;
   getItemById: (id: string) => ChecklistItemType | undefined;
   fetchTasks: (viewMode: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  groups: Group[];
   currentUser: {
     name: string;
     avatar: string;
@@ -48,13 +69,15 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (result.status === 'SC') {
+        const defaultGroup = predefinedGroups.find(g => g.id === "other") || predefinedGroups[0];
         const mappedItems = (result.data || []).map((task: any) => ({
           id: String(task.taskId),
           text: task.title,
           completed: task.taskStatus === 'COMPLETED',
-          dueDate: task.duedate, // Keep API format, parsing handled in UI
+          dueDate: task.duedate,
           creatorName: task.creator,
-          creatorAvatar: "https://github.com/shadcn.png", // Default
+          creatorAvatar: "https://github.com/shadcn.png", // Default avatar
+          group: defaultGroup, // Default group until API supports it
           history: [],
         }));
         setItems(mappedItems);
@@ -75,7 +98,7 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
     avatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080"
   };
 
-  const addItem = (text: string, dueDate?: string) => {
+  const addItem = (text: string, group: Group, dueDate?: string) => {
     const now = new Date();
     const timestamp = now.toLocaleDateString('en-US', {
       month: 'short',
@@ -94,6 +117,7 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
       creatorName: currentUser.name,
       creatorAvatar: currentUser.avatar,
       dueDate: dueDate,
+      group: group,
       history: [
         {
           id: `h-${Date.now()}`,
@@ -105,6 +129,37 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
       ]
     };
     setItems([...items, newItem]);
+  };
+
+  const updateItem = (id: string, text: string, group: Group, dueDate?: string) => {
+    const now = new Date();
+    const timestamp = now.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }) + ' at ' + now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    setItems(items.map(item => {
+      if (item.id === id) {
+        const updatedItem = { ...item, text: text, group: group, dueDate: dueDate };
+        updatedItem.history = [
+          {
+            id: `h-${Date.now()}`,
+            type: "updated",
+            userName: currentUser.name,
+            userAvatar: currentUser.avatar,
+            timestamp: timestamp
+          },
+          ...item.history
+        ];
+        return updatedItem;
+      }
+      return item;
+    }));
   };
 
   const toggleItem = (id: string) => {
@@ -176,9 +231,11 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
         items,
         setItems,
         addItem,
+        updateItem,
         toggleItem,
         deleteItem,
         getItemById,
+        groups: predefinedGroups,
         fetchTasks,
         isLoading,
         error,

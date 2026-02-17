@@ -7,7 +7,7 @@ import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight } from "lucide-r
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, addWeeks, subWeeks, eachDayOfInterval, isSameDay, isSameMonth, parseISO, startOfDay } from "date-fns";
 
 export default function CalendarView() {
-  const { items, toggleItem, deleteItem } = useChecklist();
+  const { items, toggleItem, deleteItem, updateItem, groups } = useChecklist();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("month");
 
@@ -166,9 +166,12 @@ export default function CalendarView() {
                     completerAvatar={item.completerAvatar}
                     completedDate={item.completedDate}
                     dueDate={item.dueDate}
+                    group={item.group}
                     history={item.history}
                     onToggle={toggleItem}
                     onDelete={deleteItem}
+                    onUpdate={updateItem}
+                    availableGroups={groups}
                   />
                 ))}
               </div>

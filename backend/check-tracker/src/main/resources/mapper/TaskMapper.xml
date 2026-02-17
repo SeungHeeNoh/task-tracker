@@ -44,4 +44,143 @@
         AND base.rn = 1
         ORDER BY base.duedate
     </select>
+
+    <insert id="addTask" useGeneratedKeys="true" keyProperty="taskId" keyColumn="task_id" parameterType="com.hohohehe.tasktracker.model.entity.Task">
+        INSERT INTO task
+        (
+         title,
+         duedate,
+         deleted_yn,
+         created_at,
+         created_by,
+         modified_at,
+         modified_by,
+         group_seq
+        )
+        VALUE
+        (
+         #{title},
+         #{duedate},
+         'N',
+         NOW(),
+         #{createdBy},
+         NOW(),
+         #{modifiedBy},
+         #{groupSeq}
+        )
+    </insert>
+
+    <update id="modifyTask" parameterType="com.hohohehe.tasktracker.model.entity.Task">
+        UPDATE task
+        <set>
+            <if test="title != null and title != ''">
+                title = #{title},
+            </if>
+            <if test="duedate != null">
+                duedate = #{duedate},
+            </if>
+            <if test="groupSeq != null and groupSeq != ''">
+                group_seq = #{groupSeq},
+            </if>
+            modified_at = NOW(),
+            modified_by = #{modifiedBy}
+        </set>
+        WHERE task_id = #{taskId}
+    </update>
+
+    <update id="deleteTask" parameterType="com.hohohehe.tasktracker.model.entity.Task">
+        UPDATE task
+        SET
+        deleted_yn = 'Y',
+        modified_at = NOW(),
+        modified_by = #{task.modifiedBy}
+        WHERE task_id = #{task.taskId}
+        AND deleted_yn = 'N'
+        AND group_seq in
+        <foreach collection="groupSeqs" item="seq" open="(" separator="," close=")">
+            #{seq}
+        </foreach>
+    </update>
+
+    <select id="getTaskStatus" resultType="com.hohohehe.tasktracker.model.dto.TaskInfo">
+        SELECT
+            task_id,
+            task_status
+        FROM (
+            SELECT
+                t.task_id,
+                tl.task_status
+            FROM task t
+            LEFT OUTER JOIN task_log tl on t.task_id = tl.task_id
+            WHERE t.task_id = #{taskId}
+            AND t.deleted_yn = 'N'
+            AND group_seq in
+            <foreach collection="groupSeqs" item="seq" open="(" separator="," close=")">
+                #{seq}
+            </foreach>
+            ORDER BY tl.created_at DESC
+        ) base
+        LIMIT 1
+    </select>
+
+    <resultMap id="taskDetail" type="com.hohohehe.tasktracker.model.dto.TaskDetail">
+        <id column="task_id" property="taskId"/>
+        <result column="title" property="title"/>
+        <result column="duedate" property="duedate"/>
+        <result column="creator" property="creator"/>
+        <result column="modifier" property="modifier"/>
+        <result column="group_name" property="groupName"/>
+        <collection property="taskLogDetailList" ofType="com.hohohehe.tasktracker.model.dto.TaskLogDetail" columnPrefix="task_log_">
+            <id column="id" property="id"/>
+            <result column="status" property="status"/>
+            <result column="created_at" property="createdAt"/>
+            <result column="creator" property="creator"/>
+        </collection>
+    </resultMap>
+
+    <select id="getTaskDetail" resultMap="taskDetail">
+        SELECT
+            base.task_id,
+            base.title,
+            base.duedate,
+            base.created_at,
+            u1.user_name as creator,
+            base.modified_at,
+            u2.user_name as modifier,
+            g.group_name,
+            base.task_log_id,
+            base.task_status as task_log_status,
+            base.task_created_at as task_log_created_at,
+            u3.user_name as task_log_creator
+        FROM
+            (
+                SELECT
+                    t.task_id,
+                    t.title,
+                    t.duedate,
+                    t.created_at,
+                    t.created_by,
+                    t.modified_at,
+                    t.modified_by,
+                    t.group_seq,
+                    tl.task_log_id,
+                    tl.task_status,
+                    tl.created_at as task_created_at,
+                    tl.created_by as task_created_by
+                FROM task t
+                    LEFT OUTER JOIN task_log tl on t.task_id = tl.task_id
+                WHERE t.task_id = #{taskId}
+                  AND t.deleted_yn = 'N'
+                  AND group_seq in
+                <foreach collection="groupSeqs" item="seq" open="(" separator="," close=")">
+                    #{seq}
+                </foreach>
+                ORDER BY
+                    tl.created_at DESC
+            ) base
+                LEFT OUTER JOIN users u1 on base.created_by = u1.user_seq
+                LEFT OUTER JOIN users u2 on base.modified_by = u2.user_seq
+                LEFT OUTER JOIN users u3 on base.task_created_by = u3.user_seq
+                LEFT OUTER JOIN `groups` g on base.group_seq = g.group_seq
+    </select>
 </mapper>

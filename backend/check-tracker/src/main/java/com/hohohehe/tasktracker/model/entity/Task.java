@@ -1,14 +1,16 @@
 package com.hohohehe.tasktracker.model.entity;
 
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.hohohehe.tasktracker.common.SecurityContext;
+import com.hohohehe.tasktracker.model.dto.request.ManageTaskRequest;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Setter
 @Getter
 public class Task {
@@ -19,6 +21,37 @@ public class Task {
     private Long groupSeq;
     private LocalDateTime createdAt;
     private Long createdBy;
-    private LocalDateTime updatedAt;
-    private Long updatedBy;
+    private LocalDateTime modifiedAt;
+    private Long modifiedBy;
+
+    public static Task from(ManageTaskRequest addTaskRequest) {
+        return Task
+                .builder()
+                .title(addTaskRequest.title())
+                .duedate(LocalDate.parse(addTaskRequest.duedate()))
+                .groupSeq(addTaskRequest.groupSeq())
+                .createdBy(SecurityContext.getCurrentUser().getUserSeq())
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
+
+    public static Task of(Long taskId, ManageTaskRequest addTaskRequest) {
+        return Task
+                .builder()
+                .taskId(taskId)
+                .title(addTaskRequest.title())
+                .duedate(LocalDate.parse(addTaskRequest.duedate()))
+                .groupSeq(addTaskRequest.groupSeq())
+                .createdBy(SecurityContext.getCurrentUser().getUserSeq())
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
+
+    public static Task of(Long taskId) {
+        return Task
+                .builder()
+                .taskId(taskId)
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
 }

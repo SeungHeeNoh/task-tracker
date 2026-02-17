@@ -31,6 +31,7 @@ public class MybatisConfig {
     @Bean
     public org.apache.ibatis.session.Configuration mybatisConfiguration() {
         org.apache.ibatis.session.Configuration mybatisConfiguration = new org.apache.ibatis.session.Configuration();
+        mybatisConfiguration.setDefaultEnumTypeHandler(org.apache.ibatis.type.EnumTypeHandler.class);
         mybatisConfiguration.setMapUnderscoreToCamelCase(true);
         mybatisConfiguration.setCallSettersOnNulls(true);
 

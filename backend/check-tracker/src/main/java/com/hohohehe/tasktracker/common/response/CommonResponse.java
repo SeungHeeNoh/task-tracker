@@ -1,10 +1,10 @@
 package com.hohohehe.tasktracker.common.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.hohohehe.tasktracker.common.enumCode.ResponseStatus;
 import lombok.*;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Setter
 @Getter
 @NoArgsConstructor
@@ -21,6 +21,13 @@ public class CommonResponse<T> { // 클래스 레벨에 <T> 선언
                 .status(ResponseStatus.SC)
                 .message(message)
                 .data(data)
+                .build();
+    }
+
+    public static <T> CommonResponse<T> success(String message) {
+        return CommonResponse.<T>builder()
+                .status(ResponseStatus.SC)
+                .message(message)
                 .build();
     }
 

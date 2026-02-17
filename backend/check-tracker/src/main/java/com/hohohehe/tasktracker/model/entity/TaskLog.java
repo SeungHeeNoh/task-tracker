@@ -1,13 +1,14 @@
 package com.hohohehe.tasktracker.model.entity;
 
+import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.common.enumCode.TaskStatus;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
+@AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Setter
 @Getter
 public class TaskLog {
@@ -16,4 +17,12 @@ public class TaskLog {
     private TaskStatus taskStatus;
     private LocalDateTime createdAt;
     private Long createdBy;
+
+    public static TaskLog of(Long taskId, TaskStatus taskStatus) {
+        return TaskLog.builder()
+                .taskId(taskId)
+                .taskStatus(taskStatus)
+                .createdBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
 }

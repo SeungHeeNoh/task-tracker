@@ -8,13 +8,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @Setter
 @Getter
-public class TaskInfo {
-
-    private Long taskId;
-    private String title;
-    private String duedate;
-    private TaskStatus taskStatus;
+public class TaskLogDetail {
+    private Long id;
+    private TaskStatus status;
+    private String createdAt;
     private String creator;
-    private String modifier;
-
 }

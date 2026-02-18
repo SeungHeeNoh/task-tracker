@@ -1,25 +1,32 @@
-import { useState } from "react";
-import { useChecklist } from "../context/ChecklistContext";
-import { ChecklistItem } from "../components/ChecklistItem";
+import { useState, useEffect } from "react";
+import { useTask, Group } from "../context/TaskContext";
+import { TaskItem } from "../components/TaskItem";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Calendar as CalendarComponent } from "../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Plus, Calendar, CalendarDays, CalendarRange, CalendarClock } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, isSameDay, addDays, parseISO } from "date-fns";
 
 export default function Home() {
-  const { items, addItem, toggleItem, deleteItem } = useChecklist();
+  const { items, addItem, updateItem, toggleItem, deleteItem, groups, fetchTasks, isLoading, error } = useTask();
   const [inputValue, setInputValue] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedGroup, setSelectedGroup] = useState<Group | undefined>(groups[0]);
   const [viewMode, setViewMode] = useState<string>("weekly");
 
+  useEffect(() => {
+    fetchTasks(viewMode);
+  }, [viewMode]);
+
   const handleAddItem = () => {
-    if (inputValue.trim()) {
-      addItem(inputValue.trim(), selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined);
+    if (inputValue.trim() && selectedGroup) {
+      addItem(inputValue.trim(), selectedGroup, selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined);
       setInputValue("");
       setSelectedDate(undefined);
+      setSelectedGroup(groups[0]);
     }
   };
 
@@ -37,14 +44,14 @@ export default function Home() {
       for (let i = 0; i < 7; i++) {
         const date = addDays(today, i);
         const dateKey = format(date, 'yyyy-MM-dd');
-        groups[dateKey] = items.filter(item => 
+        groups[dateKey] = items.filter(item =>
           item.dueDate && isSameDay(parseISO(item.dueDate), date)
         );
       }
     } else if (viewMode === "weekly") {
       const weekStart = startOfWeek(today, { weekStartsOn: 0 });
       const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
-      
+
       groups["This Week"] = items.filter(item => {
         if (!item.dueDate) return false;
         const dueDate = parseISO(item.dueDate);
@@ -67,7 +74,7 @@ export default function Home() {
     } else if (viewMode === "monthly") {
       const monthStart = startOfMonth(today);
       const monthEnd = endOfMonth(today);
-      
+
       groups["This Month"] = items.filter(item => {
         if (!item.dueDate) return false;
         const dueDate = parseISO(item.dueDate);
@@ -109,13 +116,47 @@ export default function Home() {
     <div className="size-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8">
         <div className="mb-8">
-          <h1 className="text-3xl mb-2">My Checklist</h1>
+          <h1 className="text-3xl mb-2">My Tasks</h1>
           <p className="text-gray-500">
             {completedCount} of {totalCount} completed
           </p>
         </div>
 
         <div className="flex gap-2 mb-6">
+          <Select value={selectedGroup?.id} onValueChange={(value) => {
+            const group = groups.find(g => g.id === value);
+            setSelectedGroup(group);
+          }}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select group">
+                {selectedGroup && (
+                  <div className="flex items-center gap-2">
+                    <span>{selectedGroup.icon}</span>
+                    <span className="truncate">
+                      {selectedGroup.name.length > 15
+                        ? selectedGroup.name.substring(0, 15) + '...'
+                        : selectedGroup.name}
+                    </span>
+                  </div>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {groups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  <div className="flex items-center gap-2">
+                    <span>{group.icon}</span>
+                    <span>
+                      {group.name.length > 15
+                        ? group.name.substring(0, 15) + '...'
+                        : group.name}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Input
             type="text"
             placeholder="Add a new item..."
@@ -124,6 +165,7 @@ export default function Home() {
             onKeyPress={handleKeyPress}
             className="flex-1"
           />
+
           <Popover>
             <PopoverTrigger asChild>
               <button
@@ -142,6 +184,7 @@ export default function Home() {
               />
             </PopoverContent>
           </Popover>
+
           <Button onClick={handleAddItem}>
             <Plus className="size-5" />
             Add
@@ -182,13 +225,13 @@ export default function Home() {
                   <span className="text-2xl">✨</span>
                 </div>
               </div>
-              
+
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {viewMode === "daily" && "No tasks for the next 7 days"}
                 {viewMode === "weekly" && "All clear this week!"}
                 {viewMode === "monthly" && "No tasks this month"}
               </h3>
-              
+
               <p className="text-gray-500 text-center max-w-md mb-6">
                 {viewMode === "daily" && "You have no upcoming tasks in the next week. Add a task with a due date to see it here."}
                 {viewMode === "weekly" && "You don't have any tasks scheduled for this week or next. Enjoy your free time or add new tasks to stay organized."}
@@ -204,8 +247,8 @@ export default function Home() {
                   Add New Task
                 </Button>
                 {viewMode !== "monthly" && (
-                  <Button 
-                    onClick={() => setViewMode("monthly")} 
+                  <Button
+                    onClick={() => setViewMode("monthly")}
                     variant="outline"
                   >
                     View Monthly
@@ -216,7 +259,7 @@ export default function Home() {
           ) : (
             Object.entries(groupedItems).map(([groupName, groupItems]) => {
               if (groupItems.length === 0) return null;
-              
+
               let dateLabel = groupName;
               if (viewMode === "daily" && groupName.match(/^\d{4}-\d{2}-\d{2}$/)) {
                 const date = parseISO(groupName);
@@ -241,7 +284,7 @@ export default function Home() {
                   </h2>
                   <div className="space-y-4">
                     {groupItems.map(item => (
-                      <ChecklistItem
+                      <TaskItem
                         key={item.id}
                         id={item.id}
                         text={item.text}
@@ -252,9 +295,12 @@ export default function Home() {
                         completerAvatar={item.completerAvatar}
                         completedDate={item.completedDate}
                         dueDate={item.dueDate}
+                        group={item.group}
                         history={item.history}
                         onToggle={toggleItem}
                         onDelete={deleteItem}
+                        onUpdate={updateItem}
+                        availableGroups={groups}
                       />
                     ))}
                   </div>

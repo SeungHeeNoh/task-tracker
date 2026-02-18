@@ -1,11 +1,11 @@
 import { RouterProvider } from "react-router";
-import { ChecklistProvider } from "./context/ChecklistContext";
+import { TaskProvider } from "./context/TaskContext";
 import { router } from "./routes";
 
 export default function App() {
   return (
-    <ChecklistProvider>
+    <TaskProvider>
       <RouterProvider router={router} />
-    </ChecklistProvider>
+    </TaskProvider>
   );
 }

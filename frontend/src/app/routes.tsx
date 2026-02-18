@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import CalendarView from "./pages/CalendarView";
 import TasksPage from "./pages/TasksPage";
 import TaskDetail from "./pages/TaskDetail";
+import LoginPage from "./pages/LoginPage";
 
 export const router = createBrowserRouter([
   {
@@ -27,5 +28,9 @@ export const router = createBrowserRouter([
         Component: TaskDetail,
       },
     ],
+  },
+  {
+    path: "/login",
+    Component: LoginPage,
   },
 ]);

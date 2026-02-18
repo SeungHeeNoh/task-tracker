@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Home, Calendar, FileText } from "lucide-react";
+import { Navbar } from "./Navbar";
 
 export function Layout() {
   const location = useLocation();
@@ -20,10 +21,11 @@ export function Layout() {
   return (
     <div className="size-full flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-white border-r flex-col">
-        <div className="p-6 border-b">
-          <h1 className="text-2xl font-semibold text-gray-900">Checklist</h1>
-          <p className="text-sm text-gray-500">Organize your tasks</p>
+      <aside className="hidden md:flex w-64 bg-white border-r flex-col z-20">
+        <div className="p-6 border-b h-16 flex items-center">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            CheckTracker
+          </h1>
         </div>
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
@@ -34,11 +36,10 @@ export function Layout() {
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      active
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active
                         ? "bg-blue-50 text-blue-600 font-medium"
                         : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     <Icon className="size-5" />
                     <span>{item.label}</span>
@@ -50,10 +51,15 @@ export function Layout() {
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto pb-20 md:pb-0">
-        <Outlet />
-      </main>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <Navbar />
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-auto bg-gray-50 pb-20 md:pb-0">
+          <Outlet />
+        </main>
+      </div>
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
@@ -65,9 +71,8 @@ export function Layout() {
               <li key={item.path} className="flex-1">
                 <Link
                   to={item.path}
-                  className={`flex flex-col items-center justify-center h-full gap-1 transition-colors ${
-                    active ? "text-blue-600" : "text-gray-600"
-                  }`}
+                  className={`flex flex-col items-center justify-center h-full gap-1 transition-colors ${active ? "text-blue-600" : "text-gray-600"
+                    }`}
                 >
                   <Icon className={`size-6 ${active ? "fill-blue-100" : ""}`} />
                   <span className="text-xs font-medium">{item.label}</span>

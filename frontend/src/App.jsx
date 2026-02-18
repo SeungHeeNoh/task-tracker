@@ -5,7 +5,7 @@ import { Input } from './components/ui/Input'
 import { ChecklistItem } from './components/ChecklistItem'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/Tabs'
 import { DatePicker } from './components/ui/DatePicker'
-import { format, addDays, isSameDay, isAfter, isBefore, startOfDay } from "date-fns"
+import { format } from "date-fns"
 import { cn } from "./lib/utils"
 
 /**
@@ -28,72 +28,66 @@ function App() {
     timestamp: format(date, "MMM d, yyyy 'at' h:mm a")
   });
 
-  // 체크리스트 아이템 상태 관리 (상세 더미 데이터 포함)
-  const [items, setItems] = useState([
-    {
-      id: "1",
-      text: "Buy groceries",
-      completed: false,
-      dueDate: addDays(new Date(), 1).toISOString(), // Tomorrow
-      creatorName: "Sarah Johnson",
-      creatorAvatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?w=100&auto=format&fit=crop&q=60",
-      history: [
-        createHistory("created", { name: "Sarah Johnson", avatarUrl: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?w=100&auto=format&fit=crop&q=60" }, new Date())
-      ]
-    },
-    {
-      id: "2",
-      text: "Finish project report",
-      completed: true,
-      dueDate: new Date().toISOString(), // Today (completed)
-      creatorName: "Michael Chen",
-      creatorAvatar: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?w=100&auto=format&fit=crop&q=60",
-      completerName: "Emily Rodriguez",
-      completerAvatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&auto=format&fit=crop&q=60",
-      completedDate: "Feb 14, 2026",
-      history: [
-        createHistory("created", { name: "Michael Chen", avatarUrl: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?w=100&auto=format&fit=crop&q=60" }, addDays(new Date(), -2)),
-        createHistory("completed", { name: "Emily Rodriguez", avatarUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&auto=format&fit=crop&q=60" }, new Date())
-      ]
-    },
-    {
-      id: "3",
-      text: "Call dentist",
-      completed: false,
-      dueDate: addDays(new Date(), 3).toISOString(), // 3 days later
-      creatorName: "Alex Kim",
-      creatorAvatar: "https://images.unsplash.com/photo-1510947565940-a38e2443c426?w=100&auto=format&fit=crop&q=60",
-      history: [
-        createHistory("created", { name: "Alex Kim", avatarUrl: "https://images.unsplash.com/photo-1510947565940-a38e2443c426?w=100&auto=format&fit=crop&q=60" }, new Date())
-      ]
-    },
-    {
-      id: "4",
-      text: "Team meeting",
-      completed: false,
-      dueDate: new Date().toISOString(), // Due Today
-      creatorName: "Sarah Johnson",
-      creatorAvatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?w=100&auto=format&fit=crop&q=60",
-      history: [
-        createHistory("created", { name: "Sarah Johnson", avatarUrl: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?w=100&auto=format&fit=crop&q=60" }, new Date())
-      ]
-    },
-    {
-      id: "5",
-      text: "Review quarterly reports",
-      completed: false,
-      dueDate: "2026-02-28T00:00:00.000Z", // Fixed date
-      creatorName: "Michael Chen",
-      creatorAvatar: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?w=100&auto=format&fit=crop&q=60",
-      history: [
-        createHistory("created", { name: "Michael Chen", avatarUrl: "https://images.unsplash.com/photo-1554765345-6ad6a5417cde?w=100&auto=format&fit=crop&q=60" }, new Date())
-      ]
-    },
-  ])
+  // 상태 관리
+  // viewMode: 'daily' | 'weekly' | 'monthly'
+  const [viewMode, setViewMode] = useState('monthly');
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // 입력 필드 상태 관리
   const [inputValue, setInputValue] = useState("")
   const [date, setDate] = useState()
+
+  // API 데이터 가져오기
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/v1/tasks?viewMode=${viewMode}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+
+        if (result.status === 'SC') { // Success Code
+          // API 데이터 매핑
+          //   taskId -> id
+          //   title -> text
+          //   duedate -> dueDate
+          //   taskStatus -> completed (CREATED/UNCOMPLETED -> false, COMPLETED -> true)
+          //   creator -> creatorName
+          const mappedItems = (result.data || []).map(task => ({
+            id: String(task.taskId),
+            text: task.title,
+            completed: task.taskStatus === 'COMPLETED',
+            dueDate: task.duedate ? new Date(task.duedate).toISOString() : undefined,
+            creatorName: task.creator,
+            // 더미 데이터나 기본값 사용 (API에 없는 필드)
+            creatorAvatar: "https://github.com/shadcn.png", // Default avatar
+            history: [], // History not in API yet
+          }));
+          setItems(mappedItems);
+        } else {
+          // FA (Failure) or other status
+          console.warn("API returned non-success status:", result);
+          setItems([]); // Clear items or handle error
+          if (result.message) {
+            setError(result.message);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch tasks:", e);
+        setError(e.message);
+        setItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [viewMode]); // viewMode 변경 시 재호출
 
   /**
    * 새로운 아이템 추가 핸들러
@@ -115,6 +109,7 @@ function App() {
       ]
     }
 
+    // Optimistic update (API 연동 시 실제로는 POST 요청 후 다시 fetch 해야 함)
     setItems([...items, newItem])
     setInputValue("") // 입력 필드 초기화
     setDate(undefined) // 날짜 초기화
@@ -167,31 +162,6 @@ function App() {
     setItems(items.filter(item => item.id !== id))
   }
 
-  // Helper functions for date categorization
-  const isDueToday = (dueDateStr) => {
-    if (!dueDateStr) return false;
-    return isSameDay(new Date(dueDateStr), new Date());
-  }
-
-  const isDueTomorrow = (dueDateStr) => {
-    if (!dueDateStr) return false;
-    return isSameDay(new Date(dueDateStr), addDays(new Date(), 1));
-  }
-
-  const isDidThisWeek = (dueDateStr) => {
-    if (!dueDateStr) return false;
-    const due = new Date(dueDateStr);
-    const today = startOfDay(new Date());
-    const nextWeek = addDays(today, 7);
-    return isAfter(due, today) && isBefore(due, nextWeek);
-  }
-
-  const isDueThisMonth = (dueDateStr) => {
-    if (!dueDateStr) return false;
-    const due = new Date(dueDateStr);
-    const today = new Date();
-    return due.getMonth() === today.getMonth() && due.getFullYear() === today.getFullYear();
-  }
 
 
   // 완료된 아이템 수 계산
@@ -203,7 +173,7 @@ function App() {
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8">
         {/* 헤더 영역: 제목 및 진행 상황 표시 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My Checklist</h1>
+          <h1 className="text-3xl font-bold mb-2">My Tasks</h1>
           <p className="text-gray-500">
             {completedCount} of {totalCount} completed
           </p>
@@ -235,7 +205,7 @@ function App() {
         </div>
 
         {/* 탭 네비게이션 */}
-        <Tabs defaultValue="monthly" className="w-full">
+        <Tabs value={viewMode} onValueChange={setViewMode} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted p-1 rounded-xl h-auto">
             <TabsTrigger value="daily" className="rounded-xl py-2 gap-2">
               <CalendarClock className="size-4" /> Daily
@@ -248,123 +218,40 @@ function App() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="monthly" className="space-y-8 mt-0">
-            {/* 섹션 헤더 */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                This Month <span className="text-sm font-normal text-gray-400">({items.filter(i => isDueThisMonth(i.dueDate)).length})</span>
-              </h2>
+          <TabsContent value={viewMode} className="space-y-8 mt-0">
+            {/* Loading & Error States */}
+            {isLoading && <div className="text-center py-10 text-gray-500">Loading tasks...</div>}
+            {error && <div className="text-center py-10 text-red-500">Error: {error}</div>}
 
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <ChecklistItem
-                    key={item.id}
-                    {...item}
-                    onToggle={handleToggleItem}
-                    onDelete={handleDeleteItem}
-                  />
-                ))}
-                {items.length === 0 && (
-                  <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-xl border border-dashed">
-                    No items for this month. Add one above!
-                  </div>
-                )}
+            {/* Task List */}
+            {!isLoading && !error && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  Tasks <span className="text-sm font-normal text-gray-400">({items.length})</span>
+                </h2>
+                <div className="space-y-4">
+                  {items.map((item) => (
+                    <ChecklistItem
+                      key={item.id}
+                      {...item}
+                      onToggle={handleToggleItem}
+                      onDelete={handleDeleteItem}
+                    />
+                  ))}
+                  {items.length === 0 && (
+                    <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-xl border border-dashed">
+                      No tasks found for this view.
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="weekly" className="space-y-8 mt-0">
-            {/* This Week Section */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                This Week <span className="text-sm font-normal text-gray-400">({items.filter(i => isDidThisWeek(i.dueDate)).length})</span>
-              </h2>
-              <div className="space-y-4">
-                {items.filter(i => isDidThisWeek(i.dueDate)).map(item => (
-                  <ChecklistItem
-                    key={item.id}
-                    {...item}
-                    onToggle={handleToggleItem}
-                    onDelete={handleDeleteItem}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Next Week Section (Dummy logic for now, using fixed date) */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                Future <span className="text-sm font-normal text-gray-400">({items.filter(i => i.dueDate && !isDidThisWeek(i.dueDate) && !isDueToday(i.dueDate) && !isDueTomorrow(i.dueDate)).length})</span>
-              </h2>
-              <div className="space-y-4">
-                {items.filter(i => i.dueDate && !isDidThisWeek(i.dueDate) && !isDueToday(i.dueDate) && !isDueTomorrow(i.dueDate)).map(item => (
-                  <ChecklistItem
-                    key={item.id}
-                    {...item}
-                    onToggle={handleToggleItem}
-                    onDelete={handleDeleteItem}
-                  />
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="daily" className="space-y-8 mt-0">
-            {/* Today Section */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                Today <span className="text-sm font-normal text-gray-400">({items.filter(i => isDueToday(i.dueDate)).length})</span>
-              </h2>
-              <div className="space-y-4">
-                {items.filter(i => isDueToday(i.dueDate)).map(item => (
-                  <ChecklistItem
-                    key={item.id}
-                    {...item}
-                    onToggle={handleToggleItem}
-                    onDelete={handleDeleteItem}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Tomorrow Section */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                Tomorrow <span className="text-sm font-normal text-gray-400">({items.filter(i => isDueTomorrow(i.dueDate)).length})</span>
-              </h2>
-              <div className="space-y-4">
-                {items.filter(i => isDueTomorrow(i.dueDate)).map(item => (
-                  <ChecklistItem
-                    key={item.id}
-                    {...item}
-                    onToggle={handleToggleItem}
-                    onDelete={handleDeleteItem}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Later Section */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                Later <span className="text-sm font-normal text-gray-400">({items.filter(i => i.dueDate && !isDueToday(i.dueDate) && !isDueTomorrow(i.dueDate)).length})</span>
-              </h2>
-              <div className="space-y-4">
-                {items.filter(i => i.dueDate && !isDueToday(i.dueDate) && !isDueTomorrow(i.dueDate)).map(item => (
-                  <ChecklistItem
-                    key={item.id}
-                    {...item}
-                    onToggle={handleToggleItem}
-                    onDelete={handleDeleteItem}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
     </div>
   )
+
 }
 
 export default App

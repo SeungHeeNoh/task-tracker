@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import { HistoryEvent } from "../components/ChecklistItem";
+import { HistoryEvent } from "../components/TaskItem";
 
 export interface Group {
   id: string;
@@ -19,7 +19,7 @@ export const predefinedGroups: Group[] = [
   { id: "other", name: "Other", color: "bg-gray-100 text-gray-700 border-gray-200", icon: "📌" },
 ];
 
-export interface ChecklistItemType {
+export interface Task {
   id: string;
   text: string;
   completed: boolean;
@@ -33,14 +33,14 @@ export interface ChecklistItemType {
   history: HistoryEvent[];
 }
 
-interface ChecklistContextType {
-  items: ChecklistItemType[];
-  setItems: (items: ChecklistItemType[]) => void;
+interface TaskContextType {
+  items: Task[];
+  setItems: (items: Task[]) => void;
   addItem: (text: string, group: Group, dueDate?: string) => void;
   updateItem: (id: string, text: string, group: Group, dueDate?: string) => void;
   toggleItem: (id: string) => void;
   deleteItem: (id: string) => void;
-  getItemById: (id: string) => ChecklistItemType | undefined;
+  getItemById: (id: string) => Task | undefined;
   fetchTasks: (viewMode: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
@@ -48,13 +48,15 @@ interface ChecklistContextType {
   currentUser: {
     name: string;
     avatar: string;
-  };
+  } | null;
+  login: () => void;
+  logout: () => void;
 }
 
-const ChecklistContext = createContext<ChecklistContextType | undefined>(undefined);
+const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
-export function ChecklistProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<ChecklistItemType[]>([]);
+export function TaskProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,12 +95,23 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const currentUser = {
-    name: "Sarah Johnson",
-    avatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080"
+  const [currentUser, setCurrentUser] = useState<{ name: string; avatar: string } | null>(null);
+
+  const login = () => {
+    setCurrentUser({
+      name: "Sarah Johnson",
+      avatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080"
+    });
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
   };
 
   const addItem = (text: string, group: Group, dueDate?: string) => {
+    // Note: currentUser check is optional depending on requirements, removed for now or keep based on logic
+    // if (!currentUser) return; 
+
     const now = new Date();
     const timestamp = now.toLocaleDateString('en-US', {
       month: 'short',
@@ -110,20 +123,20 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
       hour12: true
     });
 
-    const newItem: ChecklistItemType = {
+    const newItem: Task = {
       id: Date.now().toString(),
       text: text,
       completed: false,
-      creatorName: currentUser.name,
-      creatorAvatar: currentUser.avatar,
+      creatorName: currentUser ? currentUser.name : "Anonymous", // Fallback if not logged in
+      creatorAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
       dueDate: dueDate,
       group: group,
       history: [
         {
           id: `h-${Date.now()}`,
           type: "created",
-          userName: currentUser.name,
-          userAvatar: currentUser.avatar,
+          userName: currentUser ? currentUser.name : "Anonymous",
+          userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
           timestamp: timestamp
         }
       ]
@@ -132,6 +145,8 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
   };
 
   const updateItem = (id: string, text: string, group: Group, dueDate?: string) => {
+    // if (!currentUser) return;
+
     const now = new Date();
     const timestamp = now.toLocaleDateString('en-US', {
       month: 'short',
@@ -150,8 +165,8 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
           {
             id: `h-${Date.now()}`,
             type: "updated",
-            userName: currentUser.name,
-            userAvatar: currentUser.avatar,
+            userName: currentUser ? currentUser.name : "Anonymous",
+            userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
             timestamp: timestamp
           },
           ...item.history
@@ -163,6 +178,8 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleItem = (id: string) => {
+    // if (!currentUser) return;
+
     setItems(items.map(item => {
       if (item.id === id) {
         const now = new Date();
@@ -179,8 +196,8 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
         const updatedItem = { ...item, completed: !item.completed };
 
         if (updatedItem.completed) {
-          updatedItem.completerName = currentUser.name;
-          updatedItem.completerAvatar = currentUser.avatar;
+          updatedItem.completerName = currentUser ? currentUser.name : "Anonymous";
+          updatedItem.completerAvatar = currentUser ? currentUser.avatar : "https://github.com/shadcn.png";
           updatedItem.completedDate = new Date().toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -190,8 +207,8 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
             {
               id: `h-${Date.now()}`,
               type: "completed",
-              userName: currentUser.name,
-              userAvatar: currentUser.avatar,
+              userName: currentUser ? currentUser.name : "Anonymous",
+              userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
               timestamp: timestamp
             },
             ...item.history
@@ -204,8 +221,8 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
             {
               id: `h-${Date.now()}`,
               type: "uncompleted",
-              userName: currentUser.name,
-              userAvatar: currentUser.avatar,
+              userName: currentUser ? currentUser.name : "Anonymous",
+              userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
               timestamp: timestamp
             },
             ...item.history
@@ -226,7 +243,7 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ChecklistContext.Provider
+    <TaskContext.Provider
       value={{
         items,
         setItems,
@@ -239,18 +256,20 @@ export function ChecklistProvider({ children }: { children: ReactNode }) {
         fetchTasks,
         isLoading,
         error,
-        currentUser
+        currentUser,
+        login,
+        logout
       }}
     >
       {children}
-    </ChecklistContext.Provider>
+    </TaskContext.Provider>
   );
 }
 
-export function useChecklist() {
-  const context = useContext(ChecklistContext);
+export function useTask() {
+  const context = useContext(TaskContext);
   if (!context) {
-    throw new Error("useChecklist must be used within a ChecklistProvider");
+    throw new Error("useTask must be used within a TaskProvider");
   }
   return context;
 }

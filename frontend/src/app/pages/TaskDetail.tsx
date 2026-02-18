@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router";
-import { useChecklist } from "../context/ChecklistContext";
+import { useTask } from "../context/TaskContext";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { ArrowLeft, Calendar, CheckCircle2, Clock, User, Trash2, Tag } from "lucide-react";
@@ -8,8 +8,8 @@ import { format, parseISO } from "date-fns";
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getItemById, toggleItem, deleteItem } = useChecklist();
-  
+  const { getItemById, toggleItem, deleteItem } = useTask();
+
   const item = id ? getItemById(id) : undefined;
 
   if (!item) {
@@ -60,15 +60,15 @@ export default function TaskDetail() {
 
   const getDueDateStatus = () => {
     if (!item.dueDate || item.completed) return null;
-    
+
     const due = new Date(item.dueDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     due.setHours(0, 0, 0, 0);
-    
+
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
       return { color: "text-red-600 bg-red-50 border-red-200", label: "Overdue" };
     } else if (diffDays === 0) {
@@ -210,11 +210,11 @@ export default function TaskDetail() {
                 <Clock className="size-5 text-gray-600" />
                 Activity Timeline
               </h2>
-              
+
               <div className="relative">
                 {/* Timeline line */}
                 <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
-                
+
                 <div className="space-y-6">
                   {item.history.map((event) => (
                     <div key={event.id} className="relative flex gap-4">

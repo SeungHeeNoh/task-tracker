@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
 import { Trash2, CheckCircle2, History, Clock, Calendar, ExternalLink, Pencil } from "lucide-react";
 import { Link } from "react-router";
-import { Group } from "../context/ChecklistContext";
+import { Group } from "../context/TaskContext";
 import { useState } from "react";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -20,7 +20,7 @@ export interface HistoryEvent {
   timestamp: string;
 }
 
-interface ChecklistItemProps {
+interface TaskItemProps {
   id: string;
   text: string;
   completed: boolean;
@@ -38,10 +38,10 @@ interface ChecklistItemProps {
   availableGroups?: Group[];
 }
 
-export function ChecklistItem({ 
-  id, 
-  text, 
-  completed, 
+export function TaskItem({
+  id,
+  text,
+  completed,
   creatorName,
   creatorAvatar,
   completerName,
@@ -50,11 +50,11 @@ export function ChecklistItem({
   dueDate,
   group,
   history,
-  onToggle, 
+  onToggle,
   onDelete,
   onUpdate,
   availableGroups
-}: ChecklistItemProps) {
+}: TaskItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editText, setEditText] = useState(text);
   const [editGroup, setEditGroup] = useState<Group | undefined>(group);
@@ -83,27 +83,27 @@ export function ChecklistItem({
   const getEventText = (type: string) => {
     switch (type) {
       case "created":
-        return "created this item";
+        return "created this task";
       case "completed":
-        return "completed this item";
+        return "completed this task";
       case "uncompleted":
         return "marked as incomplete";
       default:
-        return "updated this item";
+        return "updated this task";
     }
   };
 
   const getDueDateStatus = () => {
     if (!dueDate || completed) return null;
-    
+
     const due = new Date(dueDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     due.setHours(0, 0, 0, 0);
-    
+
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
       return { color: "text-red-600 bg-red-50", label: "Overdue" };
     } else if (diffDays === 0) {
@@ -124,18 +124,17 @@ export function ChecklistItem({
           <Checkbox
             checked={completed}
             onCheckedChange={() => onToggle(id)}
-            id={`item-${id}`}
+            id={`task-${id}`}
           />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-3">
             <div className="flex-1 flex items-start gap-2">
               <label
-                htmlFor={`item-${id}`}
-                className={`block cursor-pointer flex-1 ${
-                  completed ? "line-through text-gray-400" : "text-gray-900"
-                }`}
+                htmlFor={`task-${id}`}
+                className={`block cursor-pointer flex-1 ${completed ? "line-through text-gray-400" : "text-gray-900"
+                  }`}
               >
                 {text}
               </label>
@@ -153,7 +152,7 @@ export function ChecklistItem({
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Avatar className="size-7">
@@ -164,7 +163,7 @@ export function ChecklistItem({
               </Avatar>
               <span className="text-sm text-gray-500">Created by {creatorName}</span>
             </div>
-            
+
             {completed && completerName && (
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-green-500" />
@@ -235,8 +234,8 @@ export function ChecklistItem({
                             <div className="flex items-center gap-2">
                               <span>{editGroup.icon}</span>
                               <span className="truncate">
-                                {editGroup.name.length > 15 
-                                  ? editGroup.name.substring(0, 15) + '...' 
+                                {editGroup.name.length > 15
+                                  ? editGroup.name.substring(0, 15) + '...'
                                   : editGroup.name}
                               </span>
                             </div>
@@ -249,8 +248,8 @@ export function ChecklistItem({
                             <div className="flex items-center gap-2">
                               <span>{grp.icon}</span>
                               <span>
-                                {grp.name.length > 15 
-                                  ? grp.name.substring(0, 15) + '...' 
+                                {grp.name.length > 15
+                                  ? grp.name.substring(0, 15) + '...'
                                   : grp.name}
                               </span>
                             </div>
@@ -298,8 +297,8 @@ export function ChecklistItem({
                   </div>
 
                   <div className="flex gap-2 justify-end pt-4">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => {
                         setIsEditOpen(false);
                         setEditText(text);
@@ -328,16 +327,16 @@ export function ChecklistItem({
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Checklist History</DialogTitle>
+                <DialogTitle>Task History</DialogTitle>
                 <DialogDescription>
-                  View the complete timeline of events for this checklist item.
+                  View the complete timeline of events for this task.
                 </DialogDescription>
               </DialogHeader>
               <div className="mt-4">
                 <div className="relative">
                   {/* Timeline line */}
                   <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
-                  
+
                   <div className="space-y-6">
                     {history.map((event) => (
                       <div key={event.id} className="relative flex gap-3">

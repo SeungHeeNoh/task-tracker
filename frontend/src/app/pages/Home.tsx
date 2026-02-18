@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useChecklist } from "../context/ChecklistContext";
-import { ChecklistItem } from "../components/ChecklistItem";
+import { useTask, Group } from "../context/TaskContext";
+import { TaskItem } from "../components/TaskItem";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Calendar as CalendarComponent } from "../components/ui/calendar";
@@ -9,10 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Plus, Calendar, CalendarDays, CalendarRange, CalendarClock } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, isSameDay, addDays, parseISO } from "date-fns";
-import { Group } from "../context/ChecklistContext";
 
 export default function Home() {
-  const { items, addItem, updateItem, toggleItem, deleteItem, groups, fetchTasks, isLoading, error } = useChecklist();
+  const { items, addItem, updateItem, toggleItem, deleteItem, groups, fetchTasks, isLoading, error } = useTask();
   const [inputValue, setInputValue] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedGroup, setSelectedGroup] = useState<Group | undefined>(groups[0]);
@@ -117,7 +116,7 @@ export default function Home() {
     <div className="size-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8">
         <div className="mb-8">
-          <h1 className="text-3xl mb-2">My Checklist</h1>
+          <h1 className="text-3xl mb-2">My Tasks</h1>
           <p className="text-gray-500">
             {completedCount} of {totalCount} completed
           </p>
@@ -285,7 +284,7 @@ export default function Home() {
                   </h2>
                   <div className="space-y-4">
                     {groupItems.map(item => (
-                      <ChecklistItem
+                      <TaskItem
                         key={item.id}
                         id={item.id}
                         text={item.text}

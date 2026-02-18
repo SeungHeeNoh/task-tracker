@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useChecklist } from "../context/ChecklistContext";
+import { useTask } from "../context/TaskContext";
 import { Link } from "react-router";
-import { ChecklistItem } from "../components/ChecklistItem";
+import { TaskItem } from "../components/TaskItem";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, addWeeks, subWeeks, eachDayOfInterval, isSameDay, isSameMonth, parseISO, startOfDay } from "date-fns";
 
 export default function CalendarView() {
-  const { items, toggleItem, deleteItem, updateItem, groups } = useChecklist();
+  const { items, toggleItem, deleteItem, updateItem, groups } = useTask();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("month");
 
@@ -109,17 +109,15 @@ export default function CalendarView() {
                 return (
                   <div
                     key={day.toISOString()}
-                    className={`min-h-32 p-3 border-r border-b last:border-r-0 ${
-                      !isCurrentMonth && viewMode === "month" ? "bg-gray-50" : "bg-white"
-                    }`}
+                    className={`min-h-32 p-3 border-r border-b last:border-r-0 ${!isCurrentMonth && viewMode === "month" ? "bg-gray-50" : "bg-white"
+                      }`}
                   >
-                    <div className={`text-sm font-medium mb-2 ${
-                      isToday 
+                    <div className={`text-sm font-medium mb-2 ${isToday
                         ? "inline-flex items-center justify-center size-7 rounded-full bg-blue-600 text-white"
                         : !isCurrentMonth && viewMode === "month"
-                        ? "text-gray-400"
-                        : "text-gray-900"
-                    }`}>
+                          ? "text-gray-400"
+                          : "text-gray-900"
+                      }`}>
                       {format(day, "d")}
                     </div>
 
@@ -128,11 +126,10 @@ export default function CalendarView() {
                         <Link
                           key={task.id}
                           to={`/tasks/${task.id}`}
-                          className={`block text-xs px-2 py-1 rounded truncate ${
-                            task.completed
+                          className={`block text-xs px-2 py-1 rounded truncate ${task.completed
                               ? "bg-green-100 text-green-700 line-through"
                               : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                          }`}
+                            }`}
                         >
                           {task.text}
                         </Link>
@@ -155,7 +152,7 @@ export default function CalendarView() {
               <h2 className="text-lg font-semibold mb-4">Tasks without due dates</h2>
               <div className="space-y-4">
                 {items.filter(item => !item.dueDate).map(item => (
-                  <ChecklistItem
+                  <TaskItem
                     key={item.id}
                     id={item.id}
                     text={item.text}

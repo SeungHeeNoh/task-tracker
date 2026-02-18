@@ -173,7 +173,7 @@ function App() {
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8">
         {/* 헤더 영역: 제목 및 진행 상황 표시 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My Checklist</h1>
+          <h1 className="text-3xl font-bold mb-2">My Tasks</h1>
           <p className="text-gray-500">
             {completedCount} of {totalCount} completed
           </p>

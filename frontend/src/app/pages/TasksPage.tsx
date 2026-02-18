@@ -1,9 +1,9 @@
-import { useChecklist } from "../context/ChecklistContext";
+import { useTask } from "../context/TaskContext";
 import { Link } from "react-router";
-import { ChecklistItem } from "../components/ChecklistItem";
+import { TaskItem } from "../components/TaskItem";
 
 export default function TasksPage() {
-  const { items, toggleItem, deleteItem, updateItem, groups } = useChecklist();
+  const { items, toggleItem, deleteItem, updateItem, groups } = useTask();
 
   const activeTasks = items.filter(item => !item.completed);
   const completedTasks = items.filter(item => item.completed);
@@ -31,7 +31,7 @@ export default function TasksPage() {
                   <div className="space-y-4">
                     {activeTasks.map(item => (
                       <Link key={item.id} to={`/tasks/${item.id}`}>
-                        <ChecklistItem
+                        <TaskItem
                           id={item.id}
                           text={item.text}
                           completed={item.completed}
@@ -60,7 +60,7 @@ export default function TasksPage() {
                   <div className="space-y-4">
                     {completedTasks.map(item => (
                       <Link key={item.id} to={`/tasks/${item.id}`}>
-                        <ChecklistItem
+                        <TaskItem
                           id={item.id}
                           text={item.text}
                           completed={item.completed}

@@ -48,9 +48,45 @@ export function TaskItem({
   availableGroups
 }: TaskItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [taskLogs, setTaskLogs] = useState<HistoryEvent[]>(history);
   const [editText, setEditText] = useState(text);
   const [editGroup, setEditGroup] = useState<Group | undefined>(group);
   const [editDueDate, setEditDueDate] = useState<Date | undefined>(dueDate ? parseISO(dueDate) : undefined);
+
+  const fetchTaskLogs = async () => {
+    try {
+      const response = await fetch(`/api/v1/tasks/${id}/logs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'SC' && result.data?.taskLogDetailList) {
+          const logs = result.data.taskLogDetailList.map((log: any) => {
+            let dateStr = '';
+            try {
+              dateStr = log.createdAt ? format(parseISO(log.createdAt), "MMM d, yyyy 'at' h:mm a") : '';
+            } catch (e) {
+              dateStr = log.createdAt || '';
+            }
+            return {
+              id: String(log.id),
+              type: log.status?.toLowerCase() || 'updated',
+              userName: log.creator || 'System',
+              userAvatar: 'https://github.com/shadcn.png',
+              timestamp: dateStr
+            };
+          });
+          setTaskLogs(logs.reverse());
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch task logs', error);
+    }
+  };
 
   const handleSaveEdit = async () => {
     if (editText.trim() && editGroup && onUpdate) {
@@ -322,7 +358,12 @@ export function TaskItem({
           )}
 
           <div onClick={(e) => e.stopPropagation()}>
-            <Dialog>
+            <Dialog open={isHistoryOpen} onOpenChange={(open) => {
+              setIsHistoryOpen(open);
+              if (open) {
+                fetchTaskLogs();
+              }
+            }}>
               <DialogTrigger asChild>
                 <button
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground size-9 opacity-0 group-hover:opacity-100"
@@ -343,7 +384,7 @@ export function TaskItem({
                     <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
 
                     <div className="space-y-6">
-                      {history.map((event) => (
+                      {taskLogs.length > 0 ? taskLogs.map((event) => (
                         <div key={event.id} className="relative flex gap-3">
                           <div className="relative z-10 flex items-center justify-center size-8 rounded-full bg-white border-2 border-gray-200">
                             {getEventIcon(event.type)}
@@ -353,7 +394,7 @@ export function TaskItem({
                               <Avatar className="size-6">
                                 <AvatarImage src={event.userAvatar} alt={event.userName} />
                                 <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                                  {event.userName.split(' ').map(n => n[0]).join('')}
+                                  {event.userName.split(' ').map((n: string) => n[0]).join('')}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm">
@@ -365,7 +406,11 @@ export function TaskItem({
                             <p className="text-xs text-gray-400">{event.timestamp}</p>
                           </div>
                         </div>
-                      ))}
+                      )) : (
+                        <div className="text-center text-gray-500 text-sm py-4 bg-white relative z-10">
+                          이력이 없습니다.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

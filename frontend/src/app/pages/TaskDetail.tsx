@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { ArrowLeft, Calendar, CheckCircle2, Clock, User, Trash2, Tag } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useState, useEffect } from "react";
 
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +12,46 @@ export default function TaskDetail() {
   const { getItemById, toggleItem, deleteItem } = useTask();
 
   const item = id ? getItemById(id) : undefined;
+  const [taskLogs, setTaskLogs] = useState<any[]>(item?.history || []);
+
+  useEffect(() => {
+    if (id) {
+      const fetchLogs = async () => {
+        try {
+          const response = await fetch(`/api/v1/tasks/${id}/logs`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          if (response.ok) {
+            const result = await response.json();
+            if (result.status === 'SC' && result.data?.taskLogDetailList) {
+              const logs = result.data.taskLogDetailList.map((log: any) => {
+                let dateStr = '';
+                try {
+                  dateStr = log.createdAt ? format(parseISO(log.createdAt), "MMM d, yyyy 'at' h:mm a") : '';
+                } catch (e) {
+                  dateStr = log.createdAt || '';
+                }
+                return {
+                  id: String(log.id),
+                  type: log.status?.toLowerCase() || 'updated',
+                  userName: log.creator || 'System',
+                  userAvatar: 'https://github.com/shadcn.png',
+                  timestamp: dateStr
+                };
+              });
+              setTaskLogs(logs.reverse());
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch task logs', error);
+        }
+      };
+      fetchLogs();
+    }
+  }, [id]);
 
   if (!item) {
     return (
@@ -216,7 +257,7 @@ export default function TaskDetail() {
                 <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
 
                 <div className="space-y-6">
-                  {item.history.map((event) => (
+                  {taskLogs.length > 0 ? taskLogs.map((event) => (
                     <div key={event.id} className="relative flex gap-4">
                       <div className="relative z-10 flex items-center justify-center size-8 rounded-full bg-white border-2 border-gray-200 shrink-0">
                         {getEventIcon(event.type)}
@@ -226,7 +267,7 @@ export default function TaskDetail() {
                           <Avatar className="size-7">
                             <AvatarImage src={event.userAvatar} alt={event.userName} />
                             <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                              {event.userName.split(' ').map(n => n[0]).join('')}
+                              {event.userName.split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-sm">
@@ -238,7 +279,11 @@ export default function TaskDetail() {
                         <p className="text-xs text-gray-400 ml-9">{event.timestamp}</p>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center text-gray-500 text-sm py-4 bg-white relative z-10 w-full ml-6">
+                      이력이 없습니다.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

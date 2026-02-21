@@ -1,6 +1,7 @@
 import { useTask } from "../context/TaskContext";
 import { Link } from "react-router";
 import { TaskItem } from "../components/TaskItem";
+import { PageContainer } from "../components/PageContainer";
 
 export default function TasksPage() {
   const { items, toggleItem, deleteItem, updateItem, groups } = useTask();
@@ -9,61 +10,53 @@ export default function TasksPage() {
   const completedTasks = items.filter(item => item.completed);
 
   return (
-    <div className="size-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6 overflow-auto">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl mb-2">All Tasks</h1>
-            <p className="text-gray-500">
-              {completedTasks.length} completed, {activeTasks.length} active
-            </p>
-          </div>
-
-          {items.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <p>No tasks yet. Go to <Link to="/" className="text-blue-600 hover:underline">Home</Link> to add one!</p>
+    <PageContainer
+      title="All Tasks"
+      description={`${completedTasks.length} completed, ${activeTasks.length} active`}
+    >
+      {items.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <p>No tasks yet. Go to <Link to="/" className="text-blue-600 hover:underline">Home</Link> to add one!</p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {activeTasks.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Active Tasks ({activeTasks.length})</h2>
+              <div className="space-y-4">
+                {activeTasks.map(item => (
+                  <TaskItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleItem}
+                    onDelete={deleteItem}
+                    onUpdate={updateItem}
+                    availableGroups={groups}
+                  />
+                ))}
+              </div>
             </div>
-          ) : (
-            <div className="space-y-8">
-              {activeTasks.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-4">Active Tasks ({activeTasks.length})</h2>
-                  <div className="space-y-4">
-                    {activeTasks.map(item => (
-                      <TaskItem
-                        key={item.id}
-                        item={item}
-                        onToggle={toggleItem}
-                        onDelete={deleteItem}
-                        onUpdate={updateItem}
-                        availableGroups={groups}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+          )}
 
-              {completedTasks.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-4">Completed Tasks ({completedTasks.length})</h2>
-                  <div className="space-y-4">
-                    {completedTasks.map(item => (
-                      <TaskItem
-                        key={item.id}
-                        item={item}
-                        onToggle={toggleItem}
-                        onDelete={deleteItem}
-                        onUpdate={updateItem}
-                        availableGroups={groups}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+          {completedTasks.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Completed Tasks ({completedTasks.length})</h2>
+              <div className="space-y-4">
+                {completedTasks.map(item => (
+                  <TaskItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleItem}
+                    onDelete={deleteItem}
+                    onUpdate={updateItem}
+                    availableGroups={groups}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
-      </div>
-    </div>
+      )}
+    </PageContainer>
   );
 }

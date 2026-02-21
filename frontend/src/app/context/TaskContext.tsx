@@ -38,7 +38,7 @@ interface TaskContextType {
   setItems: (items: Task[]) => void;
   addItem: (text: string, group: Group, groupSeq: number, dueDate: string) => Promise<boolean>;
   updateItem: (id: string, text: string, group: Group, dueDate?: string) => Promise<boolean>;
-  toggleItem: (id: string) => void;
+  toggleItem: (id: string) => Promise<boolean>;
   deleteItem: (id: string) => Promise<boolean>;
   getItemById: (id: string) => Task | undefined;
   fetchTasks: (viewMode: string) => Promise<void>;
@@ -194,61 +194,38 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const toggleItem = (id: string) => {
-    // if (!currentUser) return;
-
-    setItems(items.map(item => {
-      if (item.id === id) {
-        const now = new Date();
-        const timestamp = now.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        }) + ' at ' + now.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        });
-
-        const updatedItem = { ...item, completed: !item.completed };
-
-        if (updatedItem.completed) {
-          updatedItem.completerName = currentUser ? currentUser.name : "Anonymous";
-          updatedItem.completerAvatar = currentUser ? currentUser.avatar : "https://github.com/shadcn.png";
-          updatedItem.completedDate = new Date().toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          });
-          updatedItem.history = [
-            {
-              id: `h-${Date.now()}`,
-              type: "completed",
-              userName: currentUser ? currentUser.name : "Anonymous",
-              userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
-              timestamp: timestamp
-            },
-            ...item.history
-          ];
-        } else {
-          delete updatedItem.completerName;
-          delete updatedItem.completerAvatar;
-          delete updatedItem.completedDate;
-          updatedItem.history = [
-            {
-              id: `h-${Date.now()}`,
-              type: "uncompleted",
-              userName: currentUser ? currentUser.name : "Anonymous",
-              userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
-              timestamp: timestamp
-            },
-            ...item.history
-          ];
+  const toggleItem = async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/v1/tasks/${id}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         }
-        return updatedItem;
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return item;
-    }));
+
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        window.location.reload();
+        return true;
+      } else {
+        alert(result.message || "Failed to toggle task status");
+        window.location.reload();
+        return false;
+      }
+    } catch (e: any) {
+      alert(e.message || "Failed to toggle task status");
+      window.location.reload();
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteItem = async (id: string) => {

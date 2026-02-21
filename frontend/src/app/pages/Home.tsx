@@ -16,7 +16,13 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedGroup, setSelectedGroup] = useState<Group | undefined>(groups[0]);
-  const [viewMode, setViewMode] = useState<string>("weekly");
+  const [viewMode, setViewMode] = useState<string>(() => {
+    return localStorage.getItem("taskTrackerViewMode") || "weekly";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("taskTrackerViewMode", viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     fetchTasks(viewMode);

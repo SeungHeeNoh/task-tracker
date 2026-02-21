@@ -22,7 +22,7 @@ export interface HistoryEvent {
 
 interface TaskItemProps {
   item: Task;
-  onToggle: (id: string) => void;
+  onToggle: (id: string) => Promise<boolean> | void;
   onDelete: (id: string) => Promise<boolean> | void;
   onUpdate?: (id: string, text: string, group: Group, dueDate?: string) => Promise<boolean> | void;
   availableGroups?: Group[];

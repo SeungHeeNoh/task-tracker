@@ -32,17 +32,7 @@ export default function TasksPage() {
                     {activeTasks.map(item => (
                       <TaskItem
                         key={item.id}
-                        id={item.id}
-                        text={item.text}
-                        completed={item.completed}
-                        creatorName={item.creatorName}
-                        creatorAvatar={item.creatorAvatar}
-                        completerName={item.completerName}
-                        completerAvatar={item.completerAvatar}
-                        completedDate={item.completedDate}
-                        dueDate={item.dueDate}
-                        group={item.group}
-                        history={item.history}
+                        item={item}
                         onToggle={toggleItem}
                         onDelete={deleteItem}
                         onUpdate={updateItem}
@@ -60,17 +50,7 @@ export default function TasksPage() {
                     {completedTasks.map(item => (
                       <TaskItem
                         key={item.id}
-                        id={item.id}
-                        text={item.text}
-                        completed={item.completed}
-                        creatorName={item.creatorName}
-                        creatorAvatar={item.creatorAvatar}
-                        completerName={item.completerName}
-                        completerAvatar={item.completerAvatar}
-                        completedDate={item.completedDate}
-                        dueDate={item.dueDate}
-                        group={item.group}
-                        history={item.history}
+                        item={item}
                         onToggle={toggleItem}
                         onDelete={deleteItem}
                         onUpdate={updateItem}

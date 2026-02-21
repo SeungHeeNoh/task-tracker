@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
 import { Trash2, CheckCircle2, History, Clock, Calendar, ExternalLink, Pencil } from "lucide-react";
 import { Link } from "react-router";
-import { Group } from "../context/TaskContext";
+import { Group, Task } from "../context/TaskContext";
 import { useState } from "react";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -21,17 +21,7 @@ export interface HistoryEvent {
 }
 
 interface TaskItemProps {
-  id: string;
-  text: string;
-  completed: boolean;
-  creatorName: string;
-  creatorAvatar: string;
-  completerName?: string;
-  completerAvatar?: string;
-  completedDate?: string;
-  dueDate?: string;
-  group?: Group;
-  history: HistoryEvent[];
+  item: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate?: (id: string, text: string, group: Group, dueDate?: string) => void;
@@ -39,17 +29,19 @@ interface TaskItemProps {
 }
 
 export function TaskItem({
-  id,
-  text,
-  completed,
-  creatorName,
-  creatorAvatar,
-  completerName,
-  completerAvatar,
-  completedDate,
-  dueDate,
-  group,
-  history,
+  item: {
+    id,
+    text,
+    completed,
+    creatorName,
+    creatorAvatar,
+    completerName,
+    completerAvatar,
+    completedDate,
+    dueDate,
+    group,
+    history
+  },
   onToggle,
   onDelete,
   onUpdate,

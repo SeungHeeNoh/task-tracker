@@ -21,12 +21,24 @@ export default function Home() {
     fetchTasks(viewMode);
   }, [viewMode]);
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
+    if (!selectedDate) {
+      alert("마감 기한을 설정해 주세요.");
+      return;
+    }
+
     if (inputValue.trim() && selectedGroup) {
-      addItem(inputValue.trim(), selectedGroup, selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined);
-      setInputValue("");
-      setSelectedDate(undefined);
-      setSelectedGroup(groups[0]);
+      // Find the index of the selected group to use as groupSeq (1-based index)
+      const groupIndex = groups.findIndex(g => g.id === selectedGroup.id);
+      const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
+
+      const success = await addItem(inputValue.trim(), selectedGroup, groupSeq, format(selectedDate, 'yyyy-MM-dd'));
+      if (success) {
+        setInputValue("");
+        setSelectedDate(undefined);
+        setSelectedGroup(groups[0]);
+        fetchTasks(viewMode);
+      }
     }
   };
 

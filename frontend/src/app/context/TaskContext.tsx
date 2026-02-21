@@ -36,7 +36,7 @@ export interface Task {
 interface TaskContextType {
   items: Task[];
   setItems: (items: Task[]) => void;
-  addItem: (text: string, group: Group, dueDate?: string) => void;
+  addItem: (text: string, group: Group, groupSeq: number, dueDate: string) => Promise<boolean>;
   updateItem: (id: string, text: string, group: Group, dueDate?: string) => void;
   toggleItem: (id: string) => void;
   deleteItem: (id: string) => void;
@@ -108,40 +108,42 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setCurrentUser(null);
   };
 
-  const addItem = (text: string, group: Group, dueDate?: string) => {
-    // Note: currentUser check is optional depending on requirements, removed for now or keep based on logic
-    // if (!currentUser) return; 
+  const addItem = async (text: string, group: Group, groupSeq: number, dueDate: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: text,
+          groupSeq: groupSeq,
+          duedate: dueDate,
+        })
+      });
 
-    const now = new Date();
-    const timestamp = now.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }) + ' at ' + now.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const newItem: Task = {
-      id: Date.now().toString(),
-      text: text,
-      completed: false,
-      creatorName: currentUser ? currentUser.name : "Anonymous", // Fallback if not logged in
-      creatorAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
-      dueDate: dueDate,
-      group: group,
-      history: [
-        {
-          id: `h-${Date.now()}`,
-          type: "created",
-          userName: currentUser ? currentUser.name : "Anonymous",
-          userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
-          timestamp: timestamp
-        }
-      ]
-    };
-    setItems([...items, newItem]);
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        return true;
+      } else {
+        console.warn("API returned non-success status:", result);
+        setError(result.message || "Failed to add task");
+        return false;
+      }
+    } catch (e: any) {
+      console.error("Failed to add task:", e);
+      setError(e.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateItem = (id: string, text: string, group: Group, dueDate?: string) => {

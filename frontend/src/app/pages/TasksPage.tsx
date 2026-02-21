@@ -30,25 +30,24 @@ export default function TasksPage() {
                   <h2 className="text-lg font-semibold mb-4">Active Tasks ({activeTasks.length})</h2>
                   <div className="space-y-4">
                     {activeTasks.map(item => (
-                      <Link key={item.id} to={`/tasks/${item.id}`}>
-                        <TaskItem
-                          id={item.id}
-                          text={item.text}
-                          completed={item.completed}
-                          creatorName={item.creatorName}
-                          creatorAvatar={item.creatorAvatar}
-                          completerName={item.completerName}
-                          completerAvatar={item.completerAvatar}
-                          completedDate={item.completedDate}
-                          dueDate={item.dueDate}
-                          group={item.group}
-                          history={item.history}
-                          onToggle={toggleItem}
-                          onDelete={deleteItem}
-                          onUpdate={updateItem}
-                          availableGroups={groups}
-                        />
-                      </Link>
+                      <TaskItem
+                        key={item.id}
+                        id={item.id}
+                        text={item.text}
+                        completed={item.completed}
+                        creatorName={item.creatorName}
+                        creatorAvatar={item.creatorAvatar}
+                        completerName={item.completerName}
+                        completerAvatar={item.completerAvatar}
+                        completedDate={item.completedDate}
+                        dueDate={item.dueDate}
+                        group={item.group}
+                        history={item.history}
+                        onToggle={toggleItem}
+                        onDelete={deleteItem}
+                        onUpdate={updateItem}
+                        availableGroups={groups}
+                      />
                     ))}
                   </div>
                 </div>
@@ -59,25 +58,24 @@ export default function TasksPage() {
                   <h2 className="text-lg font-semibold mb-4">Completed Tasks ({completedTasks.length})</h2>
                   <div className="space-y-4">
                     {completedTasks.map(item => (
-                      <Link key={item.id} to={`/tasks/${item.id}`}>
-                        <TaskItem
-                          id={item.id}
-                          text={item.text}
-                          completed={item.completed}
-                          creatorName={item.creatorName}
-                          creatorAvatar={item.creatorAvatar}
-                          completerName={item.completerName}
-                          completerAvatar={item.completerAvatar}
-                          completedDate={item.completedDate}
-                          dueDate={item.dueDate}
-                          group={item.group}
-                          history={item.history}
-                          onToggle={toggleItem}
-                          onDelete={deleteItem}
-                          onUpdate={updateItem}
-                          availableGroups={groups}
-                        />
-                      </Link>
+                      <TaskItem
+                        key={item.id}
+                        id={item.id}
+                        text={item.text}
+                        completed={item.completed}
+                        creatorName={item.creatorName}
+                        creatorAvatar={item.creatorAvatar}
+                        completerName={item.completerName}
+                        completerAvatar={item.completerAvatar}
+                        completedDate={item.completedDate}
+                        dueDate={item.dueDate}
+                        group={item.group}
+                        history={item.history}
+                        onToggle={toggleItem}
+                        onDelete={deleteItem}
+                        onUpdate={updateItem}
+                        availableGroups={groups}
+                      />
                     ))}
                   </div>
                 </div>

@@ -37,7 +37,7 @@ interface TaskContextType {
   items: Task[];
   setItems: (items: Task[]) => void;
   addItem: (text: string, group: Group, groupSeq: number, dueDate: string) => Promise<boolean>;
-  updateItem: (id: string, text: string, group: Group, dueDate?: string) => void;
+  updateItem: (id: string, text: string, group: Group, dueDate?: string) => Promise<boolean>;
   toggleItem: (id: string) => void;
   deleteItem: (id: string) => void;
   getItemById: (id: string) => Task | undefined;
@@ -133,12 +133,12 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       if (result.status === 'SC') {
         return true;
       } else {
-        console.warn("API returned non-success status:", result);
+        alert(result.message || "Failed to add task");
         setError(result.message || "Failed to add task");
         return false;
       }
     } catch (e: any) {
-      console.error("Failed to add task:", e);
+      alert(e.message || "Failed to add task");
       setError(e.message);
       return false;
     } finally {
@@ -146,37 +146,78 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateItem = (id: string, text: string, group: Group, dueDate?: string) => {
-    // if (!currentUser) return;
+  const updateItem = async (id: string, text: string, group: Group, dueDate?: string) => {
+    if (!dueDate) {
+      alert("Due date is required for updating a task.");
+      return false;
+    }
 
-    const now = new Date();
-    const timestamp = now.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }) + ' at ' + now.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    setIsLoading(true);
+    setError(null);
+    try {
+      const groupIndex = predefinedGroups.findIndex(g => g.id === group.id);
+      const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
 
-    setItems(items.map(item => {
-      if (item.id === id) {
-        const updatedItem = { ...item, text: text, group: group, dueDate: dueDate };
-        updatedItem.history = [
-          {
-            id: `h-${Date.now()}`,
-            type: "updated",
-            userName: currentUser ? currentUser.name : "Anonymous",
-            userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
-            timestamp: timestamp
-          },
-          ...item.history
-        ];
-        return updatedItem;
+      const response = await fetch(`/api/v1/tasks/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: text,
+          groupSeq: groupSeq,
+          duedate: dueDate,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return item;
-    }));
+
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        const now = new Date();
+        const timestamp = now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }) + ' at ' + now.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        setItems(items.map(item => {
+          if (item.id === id) {
+            const updatedItem = { ...item, text: text, group: group, dueDate: dueDate };
+            updatedItem.history = [
+              {
+                id: `h-${Date.now()}`,
+                type: "updated",
+                userName: currentUser ? currentUser.name : "Anonymous",
+                userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
+                timestamp: timestamp
+              },
+              ...item.history
+            ];
+            return updatedItem;
+          }
+          return item;
+        }));
+        return true;
+      } else {
+        alert(result.message || "Failed to update task");
+        setError(result.message || "Failed to update task");
+        return false;
+      }
+    } catch (e: any) {
+      alert(e.message || "Failed to update task");
+      setError(e.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleItem = (id: string) => {

@@ -24,7 +24,7 @@ interface TaskItemProps {
   item: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate?: (id: string, text: string, group: Group, dueDate?: string) => void;
+  onUpdate?: (id: string, text: string, group: Group, dueDate?: string) => Promise<boolean> | void;
   availableGroups?: Group[];
 }
 
@@ -52,10 +52,16 @@ export function TaskItem({
   const [editGroup, setEditGroup] = useState<Group | undefined>(group);
   const [editDueDate, setEditDueDate] = useState<Date | undefined>(dueDate ? parseISO(dueDate) : undefined);
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editText.trim() && editGroup && onUpdate) {
-      onUpdate(id, editText.trim(), editGroup, editDueDate ? format(editDueDate, 'yyyy-MM-dd') : undefined);
-      setIsEditOpen(false);
+      if (!editDueDate) {
+        alert("Due date is required for updating a task.");
+        return;
+      }
+      const success = await onUpdate(id, editText.trim(), editGroup, format(editDueDate, 'yyyy-MM-dd'));
+      if (success !== false) {
+        setIsEditOpen(false);
+      }
     }
   };
 
@@ -184,180 +190,188 @@ export function TaskItem({
           </Link>
 
           {onUpdate && availableGroups && (
-            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogTrigger asChild>
+                  <button
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground size-9 opacity-0 group-hover:opacity-100"
+                  >
+                    <Pencil className="size-4 text-indigo-500" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Edit Task</DialogTitle>
+                    <DialogDescription>
+                      Update the task details below.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Task Name
+                      </label>
+                      <Input
+                        type="text"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        placeholder="Enter task name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Group
+                      </label>
+                      <Select value={editGroup?.id} onValueChange={(value) => {
+                        const selectedGroup = availableGroups.find(g => g.id === value);
+                        setEditGroup(selectedGroup);
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select group">
+                            {editGroup && (
+                              <div className="flex items-center gap-2">
+                                <span>{editGroup.icon}</span>
+                                <span className="truncate">
+                                  {editGroup.name.length > 15
+                                    ? editGroup.name.substring(0, 15) + '...'
+                                    : editGroup.name}
+                                </span>
+                              </div>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableGroups.map((grp) => (
+                            <SelectItem key={grp.id} value={grp.id}>
+                              <div className="flex items-center gap-2">
+                                <span>{grp.icon}</span>
+                                <span>
+                                  {grp.name.length > 15
+                                    ? grp.name.substring(0, 15) + '...'
+                                    : grp.name}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Due Date
+                      </label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            className={`w-full inline-flex items-center justify-between gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer ${editDueDate ? "text-blue-600" : ""}`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <Calendar className="size-4" />
+                              {editDueDate ? format(editDueDate, "MMM d, yyyy") : "Select due date"}
+                            </span>
+                            {editDueDate && (
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditDueDate(undefined);
+                                }}
+                                className="text-gray-400 hover:text-gray-600 cursor-pointer p-1"
+                              >
+                                ×
+                              </div>
+                            )}
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={editDueDate}
+                            onSelect={setEditDueDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditOpen(false);
+                          setEditText(text);
+                          setEditGroup(group);
+                          setEditDueDate(dueDate ? parseISO(dueDate) : undefined);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSaveEdit} disabled={!editText.trim() || !editGroup}>
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
+
+          <div onClick={(e) => e.stopPropagation()}>
+            <Dialog>
               <DialogTrigger asChild>
                 <button
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground size-9 opacity-0 group-hover:opacity-100"
                 >
-                  <Pencil className="size-4 text-indigo-500" />
+                  <History className="size-4 text-blue-500" />
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
+              <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Edit Task</DialogTitle>
+                  <DialogTitle>Task History</DialogTitle>
                   <DialogDescription>
-                    Update the task details below.
+                    View the complete timeline of events for this task.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Task Name
-                    </label>
-                    <Input
-                      type="text"
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      placeholder="Enter task name"
-                    />
-                  </div>
+                <div className="mt-4">
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Group
-                    </label>
-                    <Select value={editGroup?.id} onValueChange={(value) => {
-                      const selectedGroup = availableGroups.find(g => g.id === value);
-                      setEditGroup(selectedGroup);
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select group">
-                          {editGroup && (
-                            <div className="flex items-center gap-2">
-                              <span>{editGroup.icon}</span>
-                              <span className="truncate">
-                                {editGroup.name.length > 15
-                                  ? editGroup.name.substring(0, 15) + '...'
-                                  : editGroup.name}
+                    <div className="space-y-6">
+                      {history.map((event) => (
+                        <div key={event.id} className="relative flex gap-3">
+                          <div className="relative z-10 flex items-center justify-center size-8 rounded-full bg-white border-2 border-gray-200">
+                            {getEventIcon(event.type)}
+                          </div>
+                          <div className="flex-1 pt-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Avatar className="size-6">
+                                <AvatarImage src={event.userAvatar} alt={event.userName} />
+                                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                                  {event.userName.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm">
+                                <span className="font-medium">{event.userName}</span>
+                                {' '}
+                                <span className="text-gray-600">{getEventText(event.type)}</span>
                               </span>
                             </div>
-                          )}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableGroups.map((grp) => (
-                          <SelectItem key={grp.id} value={grp.id}>
-                            <div className="flex items-center gap-2">
-                              <span>{grp.icon}</span>
-                              <span>
-                                {grp.name.length > 15
-                                  ? grp.name.substring(0, 15) + '...'
-                                  : grp.name}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Due Date
-                    </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          className={`w-full inline-flex items-center justify-between gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 ${editDueDate ? "text-blue-600" : ""}`}
-                        >
-                          <span className="flex items-center gap-2">
-                            <Calendar className="size-4" />
-                            {editDueDate ? format(editDueDate, "MMM d, yyyy") : "Select due date"}
-                          </span>
-                          {editDueDate && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditDueDate(undefined);
-                              }}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={editDueDate}
-                          onSelect={setEditDueDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="flex gap-2 justify-end pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsEditOpen(false);
-                        setEditText(text);
-                        setEditGroup(group);
-                        setEditDueDate(dueDate ? parseISO(dueDate) : undefined);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleSaveEdit} disabled={!editText.trim() || !editGroup}>
-                      Save Changes
-                    </Button>
+                            <p className="text-xs text-gray-400">{event.timestamp}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
-          )}
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <button
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground size-9 opacity-0 group-hover:opacity-100"
-              >
-                <History className="size-4 text-blue-500" />
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Task History</DialogTitle>
-                <DialogDescription>
-                  View the complete timeline of events for this task.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="mt-4">
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
-
-                  <div className="space-y-6">
-                    {history.map((event) => (
-                      <div key={event.id} className="relative flex gap-3">
-                        <div className="relative z-10 flex items-center justify-center size-8 rounded-full bg-white border-2 border-gray-200">
-                          {getEventIcon(event.type)}
-                        </div>
-                        <div className="flex-1 pt-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Avatar className="size-6">
-                              <AvatarImage src={event.userAvatar} alt={event.userName} />
-                              <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                                {event.userName.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">
-                              <span className="font-medium">{event.userName}</span>
-                              {' '}
-                              <span className="text-gray-600">{getEventText(event.type)}</span>
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-400">{event.timestamp}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          </div>
 
           <Button
             variant="ghost"

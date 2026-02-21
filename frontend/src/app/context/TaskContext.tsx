@@ -39,7 +39,7 @@ interface TaskContextType {
   addItem: (text: string, group: Group, groupSeq: number, dueDate: string) => Promise<boolean>;
   updateItem: (id: string, text: string, group: Group, dueDate?: string) => Promise<boolean>;
   toggleItem: (id: string) => void;
-  deleteItem: (id: string) => void;
+  deleteItem: (id: string) => Promise<boolean>;
   getItemById: (id: string) => Task | undefined;
   fetchTasks: (viewMode: string) => Promise<void>;
   isLoading: boolean;
@@ -131,15 +131,16 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (result.status === 'SC') {
+        window.location.reload();
         return true;
       } else {
         alert(result.message || "Failed to add task");
-        setError(result.message || "Failed to add task");
+        window.location.reload();
         return false;
       }
     } catch (e: any) {
       alert(e.message || "Failed to add task");
-      setError(e.message);
+      window.location.reload();
       return false;
     } finally {
       setIsLoading(false);
@@ -177,43 +178,16 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (result.status === 'SC') {
-        const now = new Date();
-        const timestamp = now.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        }) + ' at ' + now.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        });
-
-        setItems(items.map(item => {
-          if (item.id === id) {
-            const updatedItem = { ...item, text: text, group: group, dueDate: dueDate };
-            updatedItem.history = [
-              {
-                id: `h-${Date.now()}`,
-                type: "updated",
-                userName: currentUser ? currentUser.name : "Anonymous",
-                userAvatar: currentUser ? currentUser.avatar : "https://github.com/shadcn.png",
-                timestamp: timestamp
-              },
-              ...item.history
-            ];
-            return updatedItem;
-          }
-          return item;
-        }));
+        window.location.reload();
         return true;
       } else {
         alert(result.message || "Failed to update task");
-        setError(result.message || "Failed to update task");
+        window.location.reload();
         return false;
       }
     } catch (e: any) {
       alert(e.message || "Failed to update task");
-      setError(e.message);
+      window.location.reload();
       return false;
     } finally {
       setIsLoading(false);
@@ -277,8 +251,38 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const deleteItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+  const deleteItem = async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/v1/tasks/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        window.location.reload();
+        return true;
+      } else {
+        alert(result.message || "Failed to delete task");
+        window.location.reload();
+        return false;
+      }
+    } catch (e: any) {
+      alert(e.message || "Failed to delete task");
+      window.location.reload();
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getItemById = (id: string) => {

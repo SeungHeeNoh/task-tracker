@@ -14,9 +14,9 @@ spring:
   datasource:
     hikari:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://localhost:3300/checkTracker?serverTimezone=Asia/Seoul
-      username: checkTracker
-      password: checkTracker
+      jdbc-url: jdbc:mysql://localhost:3300/taskTracker?serverTimezone=Asia/Seoul
+      username: taskTracker
+      password: taskTracker
       maximum-pool-size: 20
       connection-timeout: 30000
       max-lifetime: 1800000

@@ -7,6 +7,7 @@ import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,15 +29,19 @@ public class LoginController {
 
     @PostMapping("login")
     public CommonResponse<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.userId(), loginRequest.password());
+        try {
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.userId(), loginRequest.password());
 
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+            Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String accessToken = tokenProvider.generateAccessToken(SecurityContext.getCurrentUser());
-        Map<String, String> data = Map.of("accessToken", accessToken);
+            String accessToken = tokenProvider.generateAccessToken(SecurityContext.getCurrentUser());
+            Map<String, String> data = Map.of("accessToken", accessToken);
 
-        return CommonResponse.success("로그인에 성공하였습니다.", data);
+            return CommonResponse.success("로그인에 성공하였습니다.", data);
+        } catch (BadCredentialsException e) {
+            return CommonResponse.fail("아이디 또는 비밀번호가 일치하지 않습니다.");
+        }
     }
 }

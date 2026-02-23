@@ -49,7 +49,7 @@ interface TaskContextType {
     name: string;
     avatar: string;
   } | null;
-  login: () => void;
+  login: (userId: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -97,15 +97,49 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const [currentUser, setCurrentUser] = useState<{ name: string; avatar: string } | null>(null);
 
-  const login = () => {
-    setCurrentUser({
-      name: "Sarah Johnson",
-      avatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080"
-    });
+  const login = async (userId: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, password })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        setCurrentUser({
+          name: result.data?.user_name || "Unknown User",
+          avatar: result.data?.avatar_img || "https://github.com/shadcn.png"
+        });
+        if (result.data?.accessToken) {
+          localStorage.setItem('accessToken', result.data.accessToken);
+        }
+        return true;
+      } else {
+        setError(result.message || "로그인에 실패했습니다.");
+        return false;
+      }
+    } catch (e: any) {
+      console.error("Login failed:", e);
+      setError(e.message || "로그인 중 오류가 발생했습니다.");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = () => {
     setCurrentUser(null);
+    localStorage.removeItem('accessToken');
   };
 
   const addItem = async (text: string, group: Group, groupSeq: number, dueDate: string) => {

@@ -117,8 +117,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
       if (result.status === 'SC') {
         setCurrentUser({
-          name: result.data?.user_name || "Unknown User",
-          avatar: result.data?.avatar_img || "https://github.com/shadcn.png"
+          name: result.data?.userName || "Unknown User",
+          avatar: result.data?.avatarImg || "https://github.com/shadcn.png"
         });
         if (result.data?.accessToken) {
           localStorage.setItem('accessToken', result.data.accessToken);

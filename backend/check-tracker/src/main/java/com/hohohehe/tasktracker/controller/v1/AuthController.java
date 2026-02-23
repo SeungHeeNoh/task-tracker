@@ -4,6 +4,7 @@ import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.config.jwt.TokenProvider;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
+import com.hohohehe.tasktracker.model.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,19 +17,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 @RestController
-public class LoginController {
+public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final TokenProvider tokenProvider;
 
     @PostMapping("login")
-    public CommonResponse<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
+    public CommonResponse<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
         try {
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.userId(), loginRequest.password());
 
@@ -36,8 +38,15 @@ public class LoginController {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = tokenProvider.generateAccessToken(SecurityContext.getCurrentUser());
-            Map<String, String> data = Map.of("accessToken", accessToken);
+            Users currentUser = SecurityContext.getCurrentUser();
+            String accessToken = tokenProvider.generateAccessToken(currentUser);
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("accessToken", accessToken);
+            data.put("userSeq", currentUser.getUserSeq());
+            data.put("userId", currentUser.getUserId());
+            data.put("userName", currentUser.getUsername());
+            data.put("avatarImg", currentUser.getAvatarImg());
 
             return CommonResponse.success("로그인에 성공하였습니다.", data);
         } catch (BadCredentialsException e) {

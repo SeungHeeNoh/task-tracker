@@ -10,7 +10,7 @@ CREATE TABLE `users`
     user_id     VARCHAR(50)  NOT NULL,
     user_name   VARCHAR(50)  NOT NULL,
     password    VARCHAR(255) NOT NULL,
-    avatar_img  VARCHAR(255) NOT NULL,
+    avatar_img  LONGTEXT NOT NULL,
     created_at  datetime     NOT NULL,
     created_by  BIGINT       NOT NULL,
     modified_at datetime     NOT NULL,

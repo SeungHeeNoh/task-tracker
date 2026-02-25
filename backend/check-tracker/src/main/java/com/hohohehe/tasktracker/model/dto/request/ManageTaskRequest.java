@@ -39,9 +39,8 @@ public record ManageTaskRequest(
         }
 
         // 비즈니스 권한 검증
-        SecurityContext.getCurrentUser().getGroup()
+        SecurityContext.getCurrentUserGroupSeq()
                 .stream()
-                .map(Groups::getGroupSeq)
                 .filter(seq -> Objects.equals(seq, groupSeq))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("해당 그룹에 접근할 수 있는 권한이 없습니다."));

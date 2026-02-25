@@ -55,6 +55,26 @@ interface TaskContextType {
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
+export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('accessToken');
+  const headers = new Headers(options.headers);
+  if (token) {
+    headers.set('X-AccessToken', `Bearer ${token}`);
+  }
+
+  const response = await fetch(url, { ...options, headers });
+
+  if (response.status === 401) {
+    window.location.href = '/401';
+  } else if (response.status === 403) {
+    window.location.href = '/403';
+  } else if (response.status === 404) {
+    window.location.href = '/404';
+  }
+
+  return response;
+};
+
 export function TaskProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +84,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/v1/tasks?viewMode=${viewMode}`);
+      const response = await fetchWithAuth(`/api/v1/tasks?viewMode=${viewMode}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -146,7 +166,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/v1/tasks', {
+      const response = await fetchWithAuth('/api/v1/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,7 +213,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const groupIndex = predefinedGroups.findIndex(g => g.id === group.id);
       const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
 
-      const response = await fetch(`/api/v1/tasks/${id}`, {
+      const response = await fetchWithAuth(`/api/v1/tasks/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -232,7 +252,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/v1/tasks/${id}/status`, {
+      const response = await fetchWithAuth(`/api/v1/tasks/${id}/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +286,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/v1/tasks/${id}`, {
+      const response = await fetchWithAuth(`/api/v1/tasks/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

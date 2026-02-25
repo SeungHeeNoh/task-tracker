@@ -6,6 +6,9 @@ import CalendarView from "./pages/CalendarView";
 import TasksPage from "./pages/TasksPage";
 import TaskDetail from "./pages/TaskDetail";
 import LoginPage from "./pages/LoginPage";
+import Unauthorized from "./pages/errors/Unauthorized";
+import Forbidden from "./pages/errors/Forbidden";
+import NotFound from "./pages/errors/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -39,5 +42,21 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     Component: LoginPage,
+  },
+  {
+    path: "/401",
+    Component: Unauthorized,
+  },
+  {
+    path: "/403",
+    Component: Forbidden,
+  },
+  {
+    path: "/404",
+    Component: NotFound,
+  },
+  {
+    path: "*",
+    Component: NotFound,
   },
 ]);

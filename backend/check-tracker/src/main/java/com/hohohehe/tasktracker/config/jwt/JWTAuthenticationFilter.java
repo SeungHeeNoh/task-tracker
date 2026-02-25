@@ -31,7 +31,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
     private final JwtProperties jwtProperties;
 
-    private final static String HEADER_AUTHORIZATION = "Authorization";
+    private final static String HEADER_AUTHORIZATION = "X-AccessToken";
     private final static String TOKEN_PREFIX = "Bearer ";
 
     @Override

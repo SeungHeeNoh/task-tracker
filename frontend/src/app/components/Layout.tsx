@@ -1,9 +1,17 @@
-import { Outlet, Link, useLocation } from "react-router";
-import { Home, Calendar, FileText } from "lucide-react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router";
+import { Home, Calendar, FileText, LogOut } from "lucide-react";
 import { Navbar } from "./Navbar";
+import { useTask } from "../context/TaskContext";
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useTask();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
 
   const navItems = [
@@ -50,6 +58,15 @@ export function Layout() {
             })}
           </ul>
         </nav>
+        <div className="p-4 border-t">
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            <LogOut className="size-5" />
+            <span>로그아웃</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}

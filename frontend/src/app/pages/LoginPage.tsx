@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTask } from "../context/TaskContext";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
@@ -14,8 +14,13 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
 
     // Redirect if already logged in
+    useEffect(() => {
+        if (currentUser) {
+            navigate("/");
+        }
+    }, [currentUser, navigate]);
+
     if (currentUser) {
-        navigate("/");
         return null;
     }
 

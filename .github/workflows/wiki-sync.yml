@@ -1,0 +1,22 @@
+name: Wiki Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/wiki/**' # docs/wiki 폴더의 내용이 변경될 때만 실행
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Upload to Wiki
+        uses: SwiftDocOrg/github-wiki-publish-action@v1
+        with:
+          path: docs/wiki  # 위키 파일이 있는 경로
+        env:
+          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}

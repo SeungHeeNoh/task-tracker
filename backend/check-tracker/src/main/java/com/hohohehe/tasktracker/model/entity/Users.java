@@ -1,8 +1,7 @@
 package com.hohohehe.tasktracker.model.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Setter
 @Getter
 public class Users implements UserDetails {
@@ -27,6 +28,15 @@ public class Users implements UserDetails {
     private Long modifiedBy;
 
     private List<Groups> group = new ArrayList<>();
+
+    public static Users from(JoinRequest joinRequest) {
+        return Users.builder()
+                .userId(joinRequest.userId())
+                .userName(joinRequest.userName())
+                .password(joinRequest.password())
+                .avatarImg(joinRequest.avatarImg())
+                .build();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -3,8 +3,10 @@ package com.hohohehe.tasktracker.controller.v1;
 import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.config.jwt.TokenProvider;
+import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
+import com.hohohehe.tasktracker.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +29,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
+    private final UsersService usersService;
     private final TokenProvider tokenProvider;
 
     @PostMapping("login")
@@ -52,5 +55,16 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             return CommonResponse.fail("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
+    }
+
+    @PostMapping("/join")
+    public CommonResponse<Void> join(@RequestBody JoinRequest joinRequest) {
+        try {
+            usersService.join(Users.from(joinRequest));
+        } catch (Exception e) {
+            return CommonResponse.fail(e.getMessage());
+        }
+
+        return CommonResponse.success("회원가입에 성공했습니다.\n 로그인해주세요.");
     }
 }

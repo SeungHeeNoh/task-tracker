@@ -28,4 +28,12 @@ public class UsersService implements UserDetailsService {
 
         return user;
     }
+
+    public void join(Users users) {
+        if (usersMapper.findByUserId(users.getUserId()) != null) {
+            throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
+        }
+        usersMapper.joinUser(users);
+        usersMapper.updateCreatorInfo(users);
+    }
 }

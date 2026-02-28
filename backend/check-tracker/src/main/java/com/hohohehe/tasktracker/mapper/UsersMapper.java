@@ -7,4 +7,8 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UsersMapper {
 
     Users findByUserId(String userId);
+
+    void joinUser(Users users);
+
+    void updateCreatorInfo(Users users);
 }

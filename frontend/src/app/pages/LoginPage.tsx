@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTask } from "../context/TaskContext";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -91,7 +91,7 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-6 text-center text-sm text-gray-500">
-                        <p>아직 계정이 없으신가요? <a href="#" className="text-blue-600 hover:underline font-medium">회원가입</a></p>
+                        <p>아직 계정이 없으신가요? <Link to="/signup" className="text-blue-600 hover:underline font-medium">회원가입</Link></p>
                     </div>
 
                     <div className="mt-6 pt-6 border-t text-center text-xs text-gray-400">

@@ -51,6 +51,7 @@ interface TaskContextType {
   } | null;
   login: (userId: string, password: string) => Promise<boolean>;
   logout: () => void;
+  signup: (userData: { userId: string; userName: string; password: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -158,8 +159,45 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    alert("로그아웃 되었습니다.");
     setCurrentUser(null);
     localStorage.removeItem('accessToken');
+  };
+
+  const signup = async (userData: { userId: string; userName: string; password: string; avatarImg?: string }): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/auth/join', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          throw new Error("이미 존재하는 ID입니다.");
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        return { success: true };
+      } else {
+        setError(result.message || "회원가입에 실패했습니다.");
+        return { success: false, message: result.message || "회원가입에 실패했습니다." };
+      }
+    } catch (e: any) {
+      console.error("Signup failed:", e);
+      setError(e.message || "회원가입 중 오류가 발생했습니다.");
+      return { success: false, message: e.message || "회원가입 중 오류가 발생했습니다." };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const addItem = async (text: string, group: Group, groupSeq: number, dueDate: string) => {
@@ -336,7 +374,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         error,
         currentUser,
         login,
-        logout
+        logout,
+        signup
       }}
     >
       {children}

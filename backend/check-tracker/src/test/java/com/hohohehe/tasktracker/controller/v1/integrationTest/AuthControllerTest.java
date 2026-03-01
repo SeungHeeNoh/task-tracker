@@ -64,6 +64,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SC"))
                 // 응답에서 메시지나 데이터 필드 하위에 발급된 JWT 토큰 값이 존재하는지 체크
-                .andExpect(jsonPath("$.data.accessToken").exists());
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists());
     }
 }

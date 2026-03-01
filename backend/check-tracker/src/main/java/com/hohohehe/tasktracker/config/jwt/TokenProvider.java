@@ -30,6 +30,10 @@ public class TokenProvider {
         return generateToken(user.getUserId(), jwtProperties.getAccessTokenExpiration());
     }
 
+    public String generateRefreshToken(Users user) {
+        return generateToken(user.getUserId(), jwtProperties.getRefreshTokenExpiration());
+    }
+
     private String generateToken(String userId, long expirationMillis) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expirationMillis);

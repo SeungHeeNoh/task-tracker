@@ -16,5 +16,6 @@ public class JwtProperties {
     private String issuer;
     private String secretKey;
     private long accessTokenExpiration = 900000; // 15분 기본값
+    private long refreshTokenExpiration = 604800000;    // 일주일 기본값
     private List<String> excludePaths;
 }

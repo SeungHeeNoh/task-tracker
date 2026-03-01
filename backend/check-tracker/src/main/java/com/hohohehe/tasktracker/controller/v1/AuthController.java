@@ -45,11 +45,13 @@ public class AuthController {
 
             Users currentUser = SecurityContext.getCurrentUser();
             String accessToken = tokenProvider.generateAccessToken(currentUser);
+            String refreshToken = tokenProvider.generateRefreshToken(currentUser);
 
             redisService.saveUserCache(currentUser, SecurityContext.getCurrentUserGroupSeq());
 
             Map<String, Object> data = new HashMap<>();
             data.put("accessToken", accessToken);
+            data.put("refreshToken", refreshToken);
             data.put("userSeq", currentUser.getUserSeq());
             data.put("userId", currentUser.getUserId());
             data.put("userName", currentUser.getUsername());

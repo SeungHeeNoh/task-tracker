@@ -6,6 +6,7 @@ import com.hohohehe.tasktracker.config.jwt.TokenProvider;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
+import com.hohohehe.tasktracker.service.RedisService;
 import com.hohohehe.tasktracker.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UsersService usersService;
+    private final RedisService redisService;
     private final TokenProvider tokenProvider;
 
     @PostMapping("login")
@@ -43,6 +45,8 @@ public class AuthController {
 
             Users currentUser = SecurityContext.getCurrentUser();
             String accessToken = tokenProvider.generateAccessToken(currentUser);
+
+            redisService.saveUserCache(currentUser, SecurityContext.getCurrentUserGroupSeq());
 
             Map<String, Object> data = new HashMap<>();
             data.put("accessToken", accessToken);

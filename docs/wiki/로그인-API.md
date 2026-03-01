@@ -34,6 +34,7 @@
 | **message** | | String | | O | 결과 메시지 |
 | **data** | | json | | X | FA이면 data값 없음 |
 | | **accessToken** | | String | X | |
+| | **refreshToken** | | String | X | |
 | | **userSeq** | | int | X | |
 | | **userId** | | String | X | |
 | | **userName** | | String | X | |
@@ -48,6 +49,7 @@
   "message": "로그인에 성공하였습니다.",
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiJ9.abc...",
     "userSeq": 1,
     "userId": "test1234",
     "userName": "홍길동",

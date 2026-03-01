@@ -14,16 +14,28 @@ spring:
   datasource:
     hikari:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://localhost:3300/checkTracker?serverTimezone=Asia/Seoul
-      username: checkTracker
-      password: checkTracker
+      jdbc-url: jdbc:mysql://localhost:3300/taskTracker?serverTimezone=Asia/Seoul
+      username: taskTracker
+      password: taskTracker
       maximum-pool-size: 20
       connection-timeout: 30000
       max-lifetime: 1800000
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: taskTracker
 jwt:
   issuer: temp                                     #추후 github secrets로 대체
   secret_key: temp-temp-temp-temp-temp-temp-temp   #추후 github secrets로 대체
   access_token_expiration: 900000                  # 15분
+
+redis:
+  keys:
+    user-prefix: 'user:'
+    profile-suffix: ':profile'
+    token-suffix: ':token'
+  profile-ttl: 3600
 
 cors:
   allowed-origins: "http://localhost:5173"

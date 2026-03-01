@@ -49,22 +49,99 @@ interface TaskContextType {
     name: string;
     avatar: string;
   } | null;
-  login: () => void;
-  logout: () => void;
+  login: (userId: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void> | void;
+  signup: (userData: { userId: string; userName: string; password: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
+export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem("accessToken");
+  const headers = new Headers(options.headers);
+  if (token && token !== "null" && token !== "undefined") {
+    headers.set('X-AccessToken', `Bearer ${token}`);
+  }
+
+  let response = await fetch(url, { ...options, headers });
+
+  if (response.status === 401 || response.status === 403) {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken && refreshToken !== "null" && refreshToken !== "undefined") {
+      try {
+        const reissueRes = await fetch('/api/v1/auth/reissue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken })
+        });
+
+        const reissueData = await reissueRes.json();
+
+        if (reissueRes.ok && reissueData.status === 'SC' && reissueData.data?.accessToken) {
+          const newAccessToken = reissueData.data.accessToken;
+          localStorage.setItem("accessToken", newAccessToken);
+
+          headers.set('X-AccessToken', `Bearer ${newAccessToken}`);
+          response = await fetch(url, { ...options, headers });
+
+          if (response.status === 401 || response.status === 403) {
+            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            window.location.href = '/login';
+            throw new Error('SessionExpiredRedirect');
+          }
+        } else {
+          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = '/login';
+          throw new Error('SessionExpiredRedirect');
+        }
+      } catch (e) {
+        if ((e as Error).message !== 'SessionExpiredRedirect') {
+          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = '/login';
+        }
+        throw e;
+      }
+    } else {
+      alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = '/login';
+      throw new Error('SessionExpiredRedirect');
+    }
+  } else if (response.status === 404) {
+    window.location.href = '/404';
+  }
+
+  return response;
+};
+
 export function TaskProvider({ children }: { children: ReactNode }) {
+
   const [items, setItems] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
+  const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem("refreshToken"));
 
   const fetchTasks = async (viewMode: string) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token || token === "null" || token === "undefined") {
+      setItems([]);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/v1/tasks?viewMode=${viewMode}`);
+      const response = await fetchWithAuth(`/api/v1/tasks?viewMode=${viewMode}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -97,22 +174,123 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const [currentUser, setCurrentUser] = useState<{ name: string; avatar: string } | null>(null);
 
-  const login = () => {
-    setCurrentUser({
-      name: "Sarah Johnson",
-      avatar: "https://images.unsplash.com/photo-1649589244330-09ca58e4fa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MTAzNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080"
-    });
+  const login = async (userId: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, password })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        setCurrentUser({
+          name: result.data?.userName || "Unknown User",
+          avatar: result.data?.avatarImg || "https://github.com/shadcn.png"
+        });
+        if (result.data?.accessToken) {
+          setAccessToken(result.data.accessToken);
+          localStorage.setItem("accessToken", result.data.accessToken);
+        }
+        if (result.data?.refreshToken) {
+          setRefreshToken(result.data.refreshToken);
+          localStorage.setItem("refreshToken", result.data.refreshToken);
+        }
+        return true;
+      } else {
+        setError(result.message || "로그인에 실패했습니다.");
+        return false;
+      }
+    } catch (e: any) {
+      console.error("Login failed:", e);
+      setError(e.message || "로그인 중 오류가 발생했습니다.");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // 1. Clear state immediately to prevent React re-renders from triggering API calls
     setCurrentUser(null);
+    setAccessToken(null);
+    setRefreshToken(null);
+
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      // 2. Clear localStorage before the async fetch so any other component
+      // checking localStorage sees that we are logged out
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("taskTrackerViewMode");
+
+      if (token && token !== "null" && token !== "undefined") {
+        await fetch('/api/v1/auth/logout', {
+          method: 'POST',
+          headers: {
+            'X-AccessToken': `Bearer ${token}`
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Logout API failed:", e);
+    } finally {
+      alert("로그아웃 되었습니다.");
+      window.location.href = "/login";
+    }
+  };
+
+  const signup = async (userData: { userId: string; userName: string; password: string; avatarImg?: string }): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/auth/join', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          throw new Error("이미 존재하는 ID입니다.");
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status === 'SC') {
+        return { success: true };
+      } else {
+        setError(result.message || "회원가입에 실패했습니다.");
+        return { success: false, message: result.message || "회원가입에 실패했습니다." };
+      }
+    } catch (e: any) {
+      console.error("Signup failed:", e);
+      setError(e.message || "회원가입 중 오류가 발생했습니다.");
+      return { success: false, message: e.message || "회원가입 중 오류가 발생했습니다." };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const addItem = async (text: string, group: Group, groupSeq: number, dueDate: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/v1/tasks', {
+      const response = await fetchWithAuth('/api/v1/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,8 +317,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to add task");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to add task");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -159,7 +339,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const groupIndex = predefinedGroups.findIndex(g => g.id === group.id);
       const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
 
-      const response = await fetch(`/api/v1/tasks/${id}`, {
+      const response = await fetchWithAuth(`/api/v1/tasks/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,8 +366,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to update task");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to update task");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -198,7 +380,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/v1/tasks/${id}/status`, {
+      const response = await fetchWithAuth(`/api/v1/tasks/${id}/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -220,8 +402,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to toggle task status");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to toggle task status");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -232,7 +416,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/v1/tasks/${id}`, {
+      const response = await fetchWithAuth(`/api/v1/tasks/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -254,8 +438,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to delete task");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to delete task");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -282,7 +468,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         error,
         currentUser,
         login,
-        logout
+        logout,
+        signup
       }}
     >
       {children}

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hohohehe.tasktracker.mapper.UsersMapper">
+
+    <resultMap id="UserResultMap" type="com.hohohehe.tasktracker.model.entity.Users">
+        <id property="userSeq" column="user_seq"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="password" column="password"/>
+        <result property="avatarImg" column="avatar_img"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="modifiedAt" column="modified_at"/>
+        <result property="modifiedBy" column="modified_by"/>
+        <collection property="group" ofType="com.hohohehe.tasktracker.model.entity.Groups">
+            <id property="groupSeq" column="group_seq"/>
+            <result property="groupName" column="group_name"/>
+            <result property="createdAt" column="group_created_at"/>
+            <result property="createdBy" column="group_created_by"/>
+            <result property="updatedAt" column="group_modified_at"/>
+            <result property="updatedBy" column="group_modified_by"/>
+        </collection>
+    </resultMap>
+
+    <select id="findByUserId" parameterType="string" resultMap="UserResultMap">
+        SELECT
+            users.user_seq,
+            users.user_id,
+            users.user_name,
+            users.password,
+            users.avatar_img,
+            users.created_at,
+            users.created_by,
+            users.modified_at,
+            users.modified_by,
+            g.group_seq,
+            g.group_name,
+            g.created_at as group_created_at,
+            g.created_by as group_created_by,
+            g.modified_at as group_modified_at,
+            g.modified_by as group_modified_by
+        FROM users
+        LEFT OUTER JOIN user_group_map map on users.user_seq = map.user_seq
+        LEFT OUTER JOIN `groups` g on map.group_seq = g.group_seq
+        WHERE users.user_id = #{userId}
+    </select>
+
+    <insert id="joinUser" parameterType="com.hohohehe.tasktracker.model.entity.Users" useGeneratedKeys="true" keyProperty="userSeq">
+        INSERT INTO `users`
+            (user_id, user_name, password, avatar_img, created_at, created_by, modified_at, modified_by)
+        VALUES (#{userId},
+                #{userName},
+                #{password},
+                #{avatarImg},
+                NOW(),
+                0,
+                NOW(),
+                0)
+    </insert>
+
+    <update id="updateCreatorInfo" parameterType="com.hohohehe.tasktracker.model.entity.Users">
+        UPDATE `users`
+        SET created_by  = #{userSeq},
+            modified_by = #{userSeq}
+        WHERE user_seq = #{userSeq}
+    </update>
+</mapper>

@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router";
-import { useTask } from "../context/TaskContext";
+import { useTask, fetchWithAuth } from "../context/TaskContext";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { ArrowLeft, Calendar, CheckCircle2, Clock, User, Trash2, Tag } from "lucide-react";
@@ -18,7 +18,7 @@ export default function TaskDetail() {
     if (id) {
       const fetchLogs = async () => {
         try {
-          const response = await fetch(`/api/v1/tasks/${id}/logs`, {
+          const response = await fetchWithAuth(`/api/v1/tasks/${id}/logs`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

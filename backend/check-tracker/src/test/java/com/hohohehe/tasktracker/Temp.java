@@ -10,7 +10,7 @@ public class Temp {
     void name() {
         PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 //        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        String pw = passwordEncoder.encode("123456");
+        String pw = passwordEncoder.encode("1234");
         System.out.println(pw);
     }
 }

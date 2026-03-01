@@ -1,21 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTask } from "../context/TaskContext";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { CheckCircle2, Lock, Mail } from "lucide-react";
+import { CheckCircle2, Lock, Mail, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
-    const { login, currentUser } = useTask();
+    const { login, currentUser, error } = useTask();
     const navigate = useNavigate();
     const [id, setId] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
     // Redirect if already logged in
+    useEffect(() => {
+        if (currentUser) {
+            navigate("/");
+        }
+    }, [currentUser, navigate]);
+
     if (currentUser) {
-        navigate("/");
         return null;
     }
 
@@ -23,12 +28,12 @@ export default function LoginPage() {
         e.preventDefault();
         setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            login(); // This sets the mock user
-            setIsLoading(false);
+        const success = await login(id, password);
+
+        setIsLoading(false);
+        if (success) {
             navigate("/");
-        }, 1000);
+        }
     };
 
     return (
@@ -44,6 +49,12 @@ export default function LoginPage() {
 
                 <div className="p-8 pt-0">
                     <form onSubmit={handleLogin} className="space-y-4">
+                        {error && (
+                            <div className="bg-red-50 text-red-600 p-3 rounded-md flex items-center gap-2 text-sm">
+                                <AlertCircle className="size-4 shrink-0" />
+                                <span>{error}</span>
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <Label htmlFor="id">Id</Label>
                             <div className="relative">
@@ -80,7 +91,7 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-6 text-center text-sm text-gray-500">
-                        <p>아직 계정이 없으신가요? <a href="#" className="text-blue-600 hover:underline font-medium">회원가입</a></p>
+                        <p>아직 계정이 없으신가요? <Link to="/signup" className="text-blue-600 hover:underline font-medium">회원가입</Link></p>
                     </div>
 
                     <div className="mt-6 pt-6 border-t text-center text-xs text-gray-400">

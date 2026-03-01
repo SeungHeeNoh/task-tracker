@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/Tabs'
 import { DatePicker } from './components/ui/DatePicker'
 import { format } from "date-fns"
 import { cn } from "./lib/utils"
+import { fetchWithAuth } from "./app/context/TaskContext"
 
 /**
  * 메인 애플리케이션 컴포넌트
@@ -45,7 +46,7 @@ function App() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/v1/tasks?viewMode=${viewMode}`);
+        const response = await fetchWithAuth(`/api/v1/tasks?viewMode=${viewMode}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

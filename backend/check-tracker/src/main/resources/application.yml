@@ -13,7 +13,26 @@ spring:
       maximum-pool-size: 20
       connection-timeout: 30000
       max-lifetime: 1800000
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: taskTracker
 jwt:
   issuer: temp                                     #추후 github secrets로 대체
   secret_key: temp-temp-temp-temp-temp-temp-temp   #추후 github secrets로 대체
   access_token_expiration: 900000                  # 15분
+  refresh_token_expiration: 604800000              # 7일
+  exclude-paths:
+    - /api/v1/auth/login
+    - /api/v1/auth/join
+    - /api/v1/auth/refresh
+    - /favicon.ico
+redis:
+  keys:
+    user-prefix: 'user:'
+    profile-suffix: ':profile'
+    token-suffix: ':token'
+  ttl:
+    profile-ttl: 604810 # 7일 10초 후 삭제
+    token-ttl: 604810   # 7일 10초 후 삭제

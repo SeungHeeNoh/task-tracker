@@ -2,9 +2,9 @@ import { Checkbox } from "./ui/checkbox";
 import { Button } from "./ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
-import { Trash2, CheckCircle2, History, Clock, Calendar, ExternalLink, Pencil } from "lucide-react";
+import { History, Clock, Calendar, ExternalLink, Pencil, Trash2, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router";
-import { Group, Task } from "../context/TaskContext";
+import { Group, Task, fetchWithAuth } from "../context/TaskContext";
 import { useState } from "react";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -56,7 +56,7 @@ export function TaskItem({
 
   const fetchTaskLogs = async () => {
     try {
-      const response = await fetch(`/api/v1/tasks/${id}/logs`, {
+      const response = await fetchWithAuth(`/api/v1/tasks/${id}/logs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

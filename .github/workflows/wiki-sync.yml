@@ -19,4 +19,4 @@ jobs:
         with:
           path: docs/wiki  # 위키 파일이 있는 경로
         env:
-          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.WIKI_ACTION_TOKEN }}

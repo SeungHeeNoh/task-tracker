@@ -8,6 +8,7 @@ import com.hohohehe.tasktracker.model.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -34,8 +35,17 @@ public class RedisService {
         redisTemplate.opsForValue().set(tokenKey, userToken, Duration.ofSeconds(redisProperties.getTtl().getTokenTtl()));
     }
 
-    public void getUserCache(String userId) {
-        redisTemplate.opsForValue().get(redisProperties.getUserProfileKey(userId));
+    public UserCache getUserProfileCache(String userId) {
+        return (UserCache) redisTemplate.opsForValue().get(redisProperties.getUserProfileKey(userId));
+    }
+
+    public UserToken getUserTokenCache(String userId) {
+        return (UserToken) redisTemplate.opsForValue().get(redisProperties.getUserTokenKey(userId));
+    }
+
+    public void updateTokenCache(String userId, UserToken userToken) {
+        String tokenKey = redisProperties.getUserTokenKey(userId);
+        redisTemplate.opsForValue().set(tokenKey, userToken, Duration.ofSeconds(redisProperties.getTtl().getTokenTtl()));
     }
 
     public void clearUserCache(String userId) {

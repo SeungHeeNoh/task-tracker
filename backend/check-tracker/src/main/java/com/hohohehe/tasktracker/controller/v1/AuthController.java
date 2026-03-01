@@ -6,6 +6,7 @@ import com.hohohehe.tasktracker.config.jwt.TokenProvider;
 import com.hohohehe.tasktracker.model.dto.UserToken;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
+import com.hohohehe.tasktracker.model.dto.request.ReissueRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
 import com.hohohehe.tasktracker.service.RedisService;
 import com.hohohehe.tasktracker.service.UsersService;
@@ -35,7 +36,7 @@ public class AuthController {
     private final RedisService redisService;
     private final TokenProvider tokenProvider;
 
-    @PostMapping("login")
+    @PostMapping("/login")
     public CommonResponse<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
         try {
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.userId(), loginRequest.password());
@@ -73,5 +74,36 @@ public class AuthController {
         }
 
         return CommonResponse.success("회원가입에 성공했습니다.\n 로그인해주세요.");
+    }
+
+    @PostMapping("/reissue")
+    public CommonResponse<Map<String, Object>> reissue(@RequestBody ReissueRequest reissueRequest) {
+        try {
+            String refreshToken = reissueRequest.refreshToken();
+
+            if(!tokenProvider.validToken(refreshToken)) {
+                return CommonResponse.fail("유효하지 않은 토큰입니다.");
+            }
+
+            String userId = tokenProvider.getUserId(refreshToken);
+            UserToken cachedToken = redisService.getUserTokenCache(userId);
+
+            if (cachedToken == null || !cachedToken.getRefreshToken().equals(refreshToken)) {
+                return CommonResponse.fail("잘못된 접근입니다.");
+            }
+
+            Users user = (Users) usersService.loadUserByUsername(userId);
+            String newAccessToken = tokenProvider.generateAccessToken(user);
+
+            cachedToken.setAccessToken(newAccessToken);
+            redisService.updateTokenCache(userId, cachedToken);
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("accessToken", newAccessToken);
+
+            return CommonResponse.success("토큰 재발급에 성공하였습니다.", data);
+        } catch (Exception e) {
+            return CommonResponse.fail("토큰 재발급 중 오류가 발생했습니다.");
+        }
     }
 }

@@ -50,7 +50,7 @@ interface TaskContextType {
     avatar: string;
   } | null;
   login: (userId: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void> | void;
   signup: (userData: { userId: string; userName: string; password: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
 }
 
@@ -132,6 +132,12 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem("refreshToken"));
 
   const fetchTasks = async (viewMode: string) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token || token === "null" || token === "undefined") {
+      setItems([]);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -213,14 +219,35 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    alert("로그아웃 되었습니다.");
+  const logout = async () => {
+    // 1. Clear state immediately to prevent React re-renders from triggering API calls
     setCurrentUser(null);
     setAccessToken(null);
     setRefreshToken(null);
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    window.location.href = "/login";
+
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      // 2. Clear localStorage before the async fetch so any other component
+      // checking localStorage sees that we are logged out
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("taskTrackerViewMode");
+
+      if (token && token !== "null" && token !== "undefined") {
+        await fetch('/api/v1/auth/logout', {
+          method: 'POST',
+          headers: {
+            'X-AccessToken': `Bearer ${token}`
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Logout API failed:", e);
+    } finally {
+      alert("로그아웃 되었습니다.");
+      window.location.href = "/login";
+    }
   };
 
   const signup = async (userData: { userId: string; userName: string; password: string; avatarImg?: string }): Promise<{ success: boolean; message?: string }> => {

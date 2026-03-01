@@ -49,7 +49,7 @@ public class AuthController {
             String accessToken = tokenProvider.generateAccessToken(currentUser);
             String refreshToken = tokenProvider.generateRefreshToken(currentUser);
 
-            redisService.saveUserCache(currentUser, SecurityContext.getCurrentUserGroupSeq(), UserToken.of(accessToken, refreshToken));
+            redisService.saveUserCache(currentUser, UserToken.of(accessToken, refreshToken));
 
             Map<String, Object> data = new HashMap<>();
             data.put("accessToken", accessToken);
@@ -104,6 +104,21 @@ public class AuthController {
             return CommonResponse.success("토큰 재발급에 성공하였습니다.", data);
         } catch (Exception e) {
             return CommonResponse.fail("토큰 재발급 중 오류가 발생했습니다.");
+        }
+    }
+
+    @PostMapping("logout")
+    public CommonResponse<Void> logout() {
+        try {
+            String userId = SecurityContext.getCurrentUser().getUserId();
+
+            redisService.clearUserCache(userId);
+
+            SecurityContextHolder.clearContext();
+
+            return CommonResponse.success("로그아웃 되었습니다.");
+        } catch (Exception e) {
+            return CommonResponse.fail("로그아웃 처리 중 오류가 발생했습니다.");
         }
     }
 }

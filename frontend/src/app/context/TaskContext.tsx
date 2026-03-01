@@ -57,18 +57,65 @@ interface TaskContextType {
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken");
   const headers = new Headers(options.headers);
-  if (token) {
+  if (token && token !== "null" && token !== "undefined") {
     headers.set('X-AccessToken', `Bearer ${token}`);
   }
 
-  const response = await fetch(url, { ...options, headers });
+  let response = await fetch(url, { ...options, headers });
 
-  if (response.status === 401) {
-    window.location.href = '/401';
-  } else if (response.status === 403) {
-    window.location.href = '/403';
+  if (response.status === 401 || response.status === 403) {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken && refreshToken !== "null" && refreshToken !== "undefined") {
+      try {
+        const reissueRes = await fetch('/api/v1/auth/reissue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken })
+        });
+
+        const reissueData = await reissueRes.json();
+
+        if (reissueRes.ok && reissueData.status === 'SC' && reissueData.data?.accessToken) {
+          const newAccessToken = reissueData.data.accessToken;
+          localStorage.setItem("accessToken", newAccessToken);
+
+          headers.set('X-AccessToken', `Bearer ${newAccessToken}`);
+          response = await fetch(url, { ...options, headers });
+
+          if (response.status === 401 || response.status === 403) {
+            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            window.location.href = '/login';
+            throw new Error('SessionExpiredRedirect');
+          }
+        } else {
+          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = '/login';
+          throw new Error('SessionExpiredRedirect');
+        }
+      } catch (e) {
+        if ((e as Error).message !== 'SessionExpiredRedirect') {
+          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = '/login';
+        }
+        throw e;
+      }
+    } else {
+      alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = '/login';
+      throw new Error('SessionExpiredRedirect');
+    }
   } else if (response.status === 404) {
     window.location.href = '/404';
   }
@@ -77,9 +124,12 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 };
 
 export function TaskProvider({ children }: { children: ReactNode }) {
+
   const [items, setItems] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
+  const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem("refreshToken"));
 
   const fetchTasks = async (viewMode: string) => {
     setIsLoading(true);
@@ -142,7 +192,12 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           avatar: result.data?.avatarImg || "https://github.com/shadcn.png"
         });
         if (result.data?.accessToken) {
-          localStorage.setItem('accessToken', result.data.accessToken);
+          setAccessToken(result.data.accessToken);
+          localStorage.setItem("accessToken", result.data.accessToken);
+        }
+        if (result.data?.refreshToken) {
+          setRefreshToken(result.data.refreshToken);
+          localStorage.setItem("refreshToken", result.data.refreshToken);
         }
         return true;
       } else {
@@ -161,7 +216,11 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     alert("로그아웃 되었습니다.");
     setCurrentUser(null);
-    localStorage.removeItem('accessToken');
+    setAccessToken(null);
+    setRefreshToken(null);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    window.location.href = "/login";
   };
 
   const signup = async (userData: { userId: string; userName: string; password: string; avatarImg?: string }): Promise<{ success: boolean; message?: string }> => {
@@ -231,8 +290,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to add task");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to add task");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -278,8 +339,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to update task");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to update task");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -312,8 +375,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to toggle task status");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to toggle task status");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -346,8 +411,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return false;
       }
     } catch (e: any) {
-      alert(e.message || "Failed to delete task");
-      window.location.reload();
+      if (e.message !== 'SessionExpiredRedirect') {
+        alert(e.message || "Failed to delete task");
+        window.location.reload();
+      }
       return false;
     } finally {
       setIsLoading(false);

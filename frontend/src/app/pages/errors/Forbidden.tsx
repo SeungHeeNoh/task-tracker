@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
-import { Lock, Home } from "lucide-react";
+import { Lock } from "lucide-react";
 
 export default function Forbidden() {
     const navigate = useNavigate();
@@ -21,9 +21,9 @@ export default function Forbidden() {
                     </p>
                 </div>
                 <div className="pt-4">
-                    <Button onClick={() => navigate("/")} className="w-full gap-2">
-                        <Home className="size-4" />
-                        홈으로 돌아가기
+                    <Button onClick={() => navigate("/login")} className="w-full gap-2">
+                        <Lock className="size-4" />
+                        로그인 페이지로 이동
                     </Button>
                 </div>
             </div>

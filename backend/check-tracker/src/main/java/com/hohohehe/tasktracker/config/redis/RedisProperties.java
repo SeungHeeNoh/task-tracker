@@ -24,7 +24,7 @@ public class RedisProperties {
     @Getter @Setter
     public static class Ttl {
         private long profileTtl;
-        private Long tokenTtl;
+        private long tokenTtl;
     }
 
     public String getUserProfileKey(String userId) {

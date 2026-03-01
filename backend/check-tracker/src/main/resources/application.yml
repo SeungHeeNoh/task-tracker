@@ -34,5 +34,5 @@ redis:
     profile-suffix: ':profile'
     token-suffix: ':token'
   ttl:
-    profile-ttl: 3600
-    token-ttl: 3600
+    profile-ttl: 604810 # 7일 10초 후 삭제
+    token-ttl: 604810   # 7일 10초 후 삭제

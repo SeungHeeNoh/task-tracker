@@ -1,5 +1,8 @@
 package com.hohohehe.tasktracker.config.redis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,10 +40,22 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
+        // 1. LocalDateTime을 지원하는 ObjectMapper 설정
+        ObjectMapper objectMapper = new ObjectMapper();
+        // Java 8 날짜/시간 모듈 등록
+        objectMapper.registerModule(new JavaTimeModule());
+        // 객체의 타입 정보를 JSON에 포함
+        objectMapper.activateDefaultTyping(
+                BasicPolymorphicTypeValidator.builder().allowIfBaseType(Object.class).build(),
+                ObjectMapper.DefaultTyping.NON_FINAL
+        );
+        // 2. 설정된 ObjectMapper를 사용하는 Serializer 생성
+        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+
         // Key는 String 직렬화
         template.setKeySerializer(new StringRedisSerializer());
         // Value는 JSON 직렬화 (GenericJackson2JsonRedisSerializer 사용)
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setValueSerializer(jsonSerializer);
 
         template.afterPropertiesSet();
 

@@ -1,5 +1,6 @@
 package com.hohohehe.tasktracker.model.dto;
 
+import com.hohohehe.tasktracker.model.entity.Groups;
 import com.hohohehe.tasktracker.model.entity.Users;
 import lombok.*;
 
@@ -19,15 +20,15 @@ public class UserProfile implements Serializable {
     private String userId;
     private String userName;
     private String avatarImg;
-    private List<Long> groupSeqs;
+    private List<Groups> group;
 
-    public static UserProfile of(Users users, List<Long> groups) {
+    public static UserProfile of(Users users) {
         return UserProfile.builder()
                 .userSeq(users.getUserSeq())
                 .userId(users.getUserId())
                 .userName(users.getUsername())
                 .avatarImg(users.getAvatarImg())
-                .groupSeqs(groups)
+                .group(users.getGroup())
                 .build();
     }
 }

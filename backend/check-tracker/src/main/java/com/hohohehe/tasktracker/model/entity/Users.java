@@ -1,5 +1,6 @@
 package com.hohohehe.tasktracker.model.entity;
 
+import com.hohohehe.tasktracker.model.dto.UserProfile;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,6 +36,15 @@ public class Users implements UserDetails {
                 .userName(joinRequest.userName())
                 .password(joinRequest.password())
                 .avatarImg(joinRequest.avatarImg())
+                .build();
+    }
+
+    public static Users from(UserProfile userProfile) {
+        return Users.builder()
+                .userId(userProfile.getUserId())
+                .userName(userProfile.getUserName())
+                .avatarImg(userProfile.getAvatarImg())
+                .group(userProfile.getGroup())
                 .build();
     }
 

@@ -1,5 +1,10 @@
 package com.hohohehe.tasktracker.config.jwt;
 
+import com.hohohehe.tasktracker.common.exception.JwtAuthenticationException;
+import com.hohohehe.tasktracker.config.redis.RedisProperties;
+import com.hohohehe.tasktracker.model.dto.UserProfile;
+import com.hohohehe.tasktracker.model.entity.Users;
+import com.hohohehe.tasktracker.service.RedisService;
 import io.jsonwebtoken.JwtException;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.FilterChain;
@@ -9,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,13 +32,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
-    private final UserDetailsService userDetailsService;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final TokenProvider tokenProvider;
     private final JwtProperties jwtProperties;
+    private final RedisProperties redisProperties;
 
     private final static String HEADER_AUTHORIZATION = "X-AccessToken";
     private final static String TOKEN_PREFIX = "Bearer ";
+    private final RedisService redisService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -51,8 +58,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 String userId = tokenProvider.getUserId(token);
 
                 if(StringUtils.isNotEmpty(userId) && SecurityContextHolder.getContext().getAuthentication() == null ) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
+                    // redis에서 유저 세션 확인
+                    UserProfile userProfile = redisService.getUserProfileCache(userId);
 
+                    // redis에 유저 세션 없는 경우
+                    if(userProfile == null) {
+                        log.warn("Unauthorized access attempt or expired session for user: {}", userId);
+                        throw new JwtAuthenticationException("세션이 만료되었거나 로그아웃된 계정입니다.");
+                    }
+
+                    // redis cache 객체를 Users 객체로 변환 후 security context에 세팅
+                    Users userDetails = Users.from(userProfile);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 

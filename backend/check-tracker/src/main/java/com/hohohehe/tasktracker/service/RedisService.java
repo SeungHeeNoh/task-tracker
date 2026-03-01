@@ -1,6 +1,5 @@
 package com.hohohehe.tasktracker.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hohohehe.tasktracker.config.redis.RedisProperties;
 import com.hohohehe.tasktracker.model.dto.UserProfile;
 import com.hohohehe.tasktracker.model.dto.UserToken;
@@ -8,11 +7,9 @@ import com.hohohehe.tasktracker.model.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -22,10 +19,9 @@ public class RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisProperties redisProperties;
-    private final ObjectMapper objectMapper;
 
-    public void saveUserCache(Users users, List<Long> groups, UserToken userToken) {
-        UserProfile userProfile = UserProfile.of(users, groups);
+    public void saveUserCache(Users users, UserToken userToken) {
+        UserProfile userProfile = UserProfile.of(users);
         String profileKey = redisProperties.getUserProfileKey(userProfile.getUserId());
         String tokenKey = redisProperties.getUserTokenKey(userProfile.getUserId());
 
@@ -35,8 +31,8 @@ public class RedisService {
         redisTemplate.opsForValue().set(tokenKey, userToken, Duration.ofSeconds(redisProperties.getTtl().getTokenTtl()));
     }
 
-    public UserCache getUserProfileCache(String userId) {
-        return (UserCache) redisTemplate.opsForValue().get(redisProperties.getUserProfileKey(userId));
+    public UserProfile getUserProfileCache(String userId) {
+        return (UserProfile) redisTemplate.opsForValue().get(redisProperties.getUserProfileKey(userId));
     }
 
     public UserToken getUserTokenCache(String userId) {

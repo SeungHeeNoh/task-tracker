@@ -3,6 +3,7 @@ package com.hohohehe.tasktracker.controller.v1;
 import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.config.jwt.TokenProvider;
+import com.hohohehe.tasktracker.model.dto.UserToken;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
@@ -47,7 +48,7 @@ public class AuthController {
             String accessToken = tokenProvider.generateAccessToken(currentUser);
             String refreshToken = tokenProvider.generateRefreshToken(currentUser);
 
-            redisService.saveUserCache(currentUser, SecurityContext.getCurrentUserGroupSeq());
+            redisService.saveUserCache(currentUser, SecurityContext.getCurrentUserGroupSeq(), UserToken.of(accessToken, refreshToken));
 
             Map<String, Object> data = new HashMap<>();
             data.put("accessToken", accessToken);

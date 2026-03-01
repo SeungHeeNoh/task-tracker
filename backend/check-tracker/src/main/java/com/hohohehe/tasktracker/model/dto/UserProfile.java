@@ -1,7 +1,5 @@
 package com.hohohehe.tasktracker.model.dto;
 
-import com.hohohehe.tasktracker.common.SecurityContext;
-import com.hohohehe.tasktracker.model.entity.Groups;
 import com.hohohehe.tasktracker.model.entity.Users;
 import lombok.*;
 

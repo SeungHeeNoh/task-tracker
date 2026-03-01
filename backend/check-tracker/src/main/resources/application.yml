@@ -33,4 +33,6 @@ redis:
     user-prefix: 'user:'
     profile-suffix: ':profile'
     token-suffix: ':token'
-  profile-ttl: 3600
+  ttl:
+    profile-ttl: 3600
+    token-ttl: 3600

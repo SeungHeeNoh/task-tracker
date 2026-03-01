@@ -12,13 +12,19 @@ import org.springframework.stereotype.Component;
 public class RedisProperties {
 
     private Keys keys;
-    private int profileTtl;
+    private Ttl ttl;
 
     @Getter @Setter
     public static class Keys {
         private String userPrefix;
         private String profileSuffix;
         private String tokenSuffix;
+    }
+
+    @Getter @Setter
+    public static class Ttl {
+        private long profileTtl;
+        private Long tokenTtl;
     }
 
     public String getUserProfileKey(String userId) {

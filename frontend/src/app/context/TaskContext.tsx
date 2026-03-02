@@ -194,16 +194,16 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
       if (result.status === 'SC') {
         setCurrentUser({
-          name: result.data?.userName || "Unknown User",
-          avatar: result.data?.avatarImg || "https://github.com/shadcn.png"
+          name: result.data?.userInfo?.userName || "Unknown User",
+          avatar: result.data?.userInfo?.avatarImg || "https://github.com/shadcn.png"
         });
-        if (result.data?.accessToken) {
-          setAccessToken(result.data.accessToken);
-          localStorage.setItem("accessToken", result.data.accessToken);
+        if (result.data?.token?.accessToken) {
+          setAccessToken(result.data.token.accessToken);
+          localStorage.setItem("accessToken", result.data.token.accessToken);
         }
-        if (result.data?.refreshToken) {
-          setRefreshToken(result.data.refreshToken);
-          localStorage.setItem("refreshToken", result.data.refreshToken);
+        if (result.data?.token?.refreshToken) {
+          setRefreshToken(result.data.token.refreshToken);
+          localStorage.setItem("refreshToken", result.data.token.refreshToken);
         }
         return true;
       } else {

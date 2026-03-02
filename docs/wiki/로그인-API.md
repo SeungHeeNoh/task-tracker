@@ -28,17 +28,22 @@
 
 ### [Response]
 
-| 파라미터명(1) | 파라미터명(2) | 타입(1) | 타입(2) | 필수여부 | 설명 |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| **status** | | String | | O | SC, FA 반환 |
-| **message** | | String | | O | 결과 메시지 |
-| **data** | | json | | X | FA이면 data값 없음 |
-| | **accessToken** | | String | X | |
-| | **refreshToken** | | String | X | |
-| | **userSeq** | | int | X | |
-| | **userId** | | String | X | |
-| | **userName** | | String | X | |
-| | **avatarImg** | | String | X | |
+| 파라미터명(1) | 파라미터명(2) | 파라미터명(3) | 파라미터명(4) | 타입(1) | 타입(2) | 타입(3) | 타입(4) | 필수여부 | 설명 |
+| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **status** | | | | String | | | | O | SC, FA 반환 |
+| **message** | | | | String | | | | O | 결과 메시지 |
+| **data** | | | | json | | | | X | FA이면 data값 없음 |
+| | **token** | | | | json | | | X | |
+| | | **accessToken** | | | | String | | X | |
+| | | **refreshToken** | | | | String | | X | |
+| | **userInfo** | | | | json | | | X | |
+| | | **userSeq** | | | | int | | X | |
+| | | **userId** | | | | String | | X | |
+| | | **userName** | | | | String | | X | |
+| | | **avatarImg** | | | | String | | X | |
+| | **groupInfo** | | | | list | | | X | |
+| | | **groupSeq** | | | | int | | X | |
+| | | **groupName** | | | | String | | X | |
 
 ---
 
@@ -48,12 +53,22 @@
   "status": "SC",
   "message": "로그인에 성공하였습니다.",
   "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiJ9.abc...",
-    "userSeq": 1,
-    "userId": "test1234",
-    "userName": "홍길동",
-    "avatarImg": "avatar1.png"
+    "token": {
+      "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiJ9.abc..."
+    },
+    "userInfo": {
+      "userSeq": 1,
+      "userId": "test1234",
+      "userName": "홍길동",
+      "avatarImg": "avatar1.png"
+    },
+    "groupInfo": [
+      {
+        "groupSeq": 1,
+        "groupName": "그룹이름"
+      }
+    ]
   }
 }
 ```

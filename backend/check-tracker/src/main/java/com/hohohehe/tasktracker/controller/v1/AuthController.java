@@ -1,14 +1,13 @@
 package com.hohohehe.tasktracker.controller.v1;
 
 import com.hohohehe.tasktracker.common.SecurityContext;
+import com.hohohehe.tasktracker.common.exception.SystemException;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
-import com.hohohehe.tasktracker.config.jwt.TokenProvider;
-import com.hohohehe.tasktracker.model.dto.UserToken;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
 import com.hohohehe.tasktracker.model.dto.request.ReissueRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
-import com.hohohehe.tasktracker.service.RedisService;
+import com.hohohehe.tasktracker.service.AuthService;
 import com.hohohehe.tasktracker.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -31,33 +29,18 @@ import java.util.Map;
 @RestController
 public class AuthController {
 
+    private final AuthService authService;
     private final AuthenticationManager authenticationManager;
     private final UsersService usersService;
-    private final RedisService redisService;
-    private final TokenProvider tokenProvider;
 
     @PostMapping("/login")
-    public CommonResponse<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
+    public CommonResponse<Map<String, Map<String, Object>>> login(@RequestBody LoginRequest loginRequest) {
         try {
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.userId(), loginRequest.password());
-
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            Users currentUser = SecurityContext.getCurrentUser();
-            String accessToken = tokenProvider.generateAccessToken(currentUser);
-            String refreshToken = tokenProvider.generateRefreshToken(currentUser);
-
-            redisService.saveUserCache(currentUser, UserToken.of(accessToken, refreshToken));
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("accessToken", accessToken);
-            data.put("refreshToken", refreshToken);
-            data.put("userSeq", currentUser.getUserSeq());
-            data.put("userId", currentUser.getUserId());
-            data.put("userName", currentUser.getUsername());
-            data.put("avatarImg", currentUser.getAvatarImg());
+            Map<String, Map<String, Object>> data = authService.getLoginResponse();
 
             return CommonResponse.success("로그인에 성공하였습니다.", data);
         } catch (BadCredentialsException e) {
@@ -68,6 +51,7 @@ public class AuthController {
     @PostMapping("/join")
     public CommonResponse<Void> join(@RequestBody JoinRequest joinRequest) {
         try {
+            joinRequest.checkValidation();
             usersService.join(Users.from(joinRequest));
         } catch (Exception e) {
             return CommonResponse.fail(e.getMessage());
@@ -79,30 +63,15 @@ public class AuthController {
     @PostMapping("/reissue")
     public CommonResponse<Map<String, Object>> reissue(@RequestBody ReissueRequest reissueRequest) {
         try {
+            reissueRequest.checkValidation();
             String refreshToken = reissueRequest.refreshToken();
-
-            if(!tokenProvider.validToken(refreshToken)) {
-                return CommonResponse.fail("유효하지 않은 토큰입니다.");
-            }
-
-            String userId = tokenProvider.getUserId(refreshToken);
-            UserToken cachedToken = redisService.getUserTokenCache(userId);
-
-            if (cachedToken == null || !cachedToken.getRefreshToken().equals(refreshToken)) {
-                return CommonResponse.fail("잘못된 접근입니다.");
-            }
-
-            Users user = (Users) usersService.loadUserByUsername(userId);
-            String newAccessToken = tokenProvider.generateAccessToken(user);
-
-            cachedToken.setAccessToken(newAccessToken);
-            redisService.updateTokenCache(userId, cachedToken);
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("accessToken", newAccessToken);
+            Map<String, Object> data = authService.getNewAccessTokenResponse(refreshToken);
 
             return CommonResponse.success("토큰 재발급에 성공하였습니다.", data);
+        } catch (SystemException | IllegalArgumentException e) {
+            return CommonResponse.fail(e.getMessage());
         } catch (Exception e) {
+            log.error("토큰 재발급 중 오류 발생: ", e);
             return CommonResponse.fail("토큰 재발급 중 오류가 발생했습니다.");
         }
     }
@@ -110,12 +79,7 @@ public class AuthController {
     @PostMapping("logout")
     public CommonResponse<Void> logout() {
         try {
-            String userId = SecurityContext.getCurrentUser().getUserId();
-
-            redisService.clearUserCache(userId);
-
-            SecurityContextHolder.clearContext();
-
+            authService.logout();
             return CommonResponse.success("로그아웃 되었습니다.");
         } catch (Exception e) {
             return CommonResponse.fail("로그아웃 처리 중 오류가 발생했습니다.");

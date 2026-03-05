@@ -46,12 +46,14 @@ interface TaskContextType {
   error: string | null;
   groups: Group[];
   currentUser: {
+    seq: string;
     name: string;
     avatar: string;
   } | null;
   login: (userId: string, password: string) => Promise<boolean>;
   logout: () => Promise<void> | void;
   signup: (userData: { userId: string; userName: string; password: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
+  updateProfile: (userData: { userName: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -65,7 +67,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 
   let response = await fetch(url, { ...options, headers });
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401) {
     const refreshToken = localStorage.getItem("refreshToken");
     if (refreshToken && refreshToken !== "null" && refreshToken !== "undefined") {
       try {
@@ -86,7 +88,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
           headers.set('X-AccessToken', `Bearer ${newAccessToken}`);
           response = await fetch(url, { ...options, headers });
 
-          if (response.status === 401 || response.status === 403) {
+          if (response.status === 401) {
             alert("세션이 만료되었습니다. 다시 로그인해주세요.");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
@@ -186,7 +188,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const [currentUser, setCurrentUser] = useState<{ name: string; avatar: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ seq: string; name: string; avatar: string } | null>(() => {
+    const saved = localStorage.getItem("currentUser");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { }
+    }
+    return null;
+  });
 
   const login = async (userId: string, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -217,10 +225,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           return false;
         }
 
-        setCurrentUser({
+        const userObj = {
+          seq: result.data?.userInfo?.userSeq || result.data?.userSeq || "",
           name: result.data?.userInfo?.userName || result.data?.userName || "Unknown User",
           avatar: result.data?.userInfo?.avatarImg || result.data?.avatarImg || "https://github.com/shadcn.png"
-        });
+        };
+        setCurrentUser(userObj);
+        localStorage.setItem("currentUser", JSON.stringify(userObj));
 
         setAccessToken(accessToken);
         localStorage.setItem("accessToken", accessToken);
@@ -273,6 +284,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("taskTrackerViewMode");
       localStorage.removeItem("groupInfo");
       localStorage.removeItem("taskGroups");
+      localStorage.removeItem("currentUser");
       setGroups(predefinedGroups);
 
       if (token && token !== "null" && token !== "undefined") {
@@ -322,6 +334,62 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       console.error("Signup failed:", e);
       setError(e.message || "회원가입 중 오류가 발생했습니다.");
       return { success: false, message: e.message || "회원가입 중 오류가 발생했습니다." };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProfile = async (userData: { userName: string; avatarImg?: string }): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!currentUser?.seq) {
+        throw new Error("사용자 시퀀스 정보가 없습니다. 다시 로그인해 주세요.");
+      }
+
+      const response = await fetchWithAuth(`/api/v1/users/${currentUser.seq}/modify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      let result;
+      // Try to parse JSON even if status is not OK to get the backend's error message
+      try {
+        result = await response.json();
+      } catch (e) {
+        result = null;
+      }
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(result?.message || "권한이 없습니다. (403 Forbidden)");
+        }
+        throw new Error(result?.message || `서버 오류가 발생했습니다. (상태 코드: ${response.status})`);
+      }
+
+      if (result.status === 'SC') {
+        // Update local state to reflect the changes immediately
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            name: userData.userName,
+            avatar: userData.avatarImg ? `data:image/jpeg;base64,${userData.avatarImg}` : currentUser.avatar
+          };
+          setCurrentUser(updatedUser);
+          localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+        }
+        return { success: true };
+      } else {
+        setError(result?.message || "프로필 정보 수정에 실패했습니다.");
+        return { success: false, message: result?.message || "프로필 정보 수정에 실패했습니다." };
+      }
+    } catch (e: any) {
+      console.error("Profile update failed:", e);
+      setError(e.message || "프로필 수정 중 오류가 발생했습니다.");
+      return { success: false, message: e.message || "프로필 수정 중 오류가 발생했습니다." };
     } finally {
       setIsLoading(false);
     }
@@ -510,7 +578,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         currentUser,
         login,
         logout,
-        signup
+        signup,
+        updateProfile
       }}
     >
       {children}

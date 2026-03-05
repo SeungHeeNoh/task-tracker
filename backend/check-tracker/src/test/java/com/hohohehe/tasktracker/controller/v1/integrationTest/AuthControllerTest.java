@@ -150,8 +150,8 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SC"))
-                .andExpect(jsonPath("$.data.token.access_token").exists())
-                .andExpect(jsonPath("$.data.token.refresh_token").exists());
+                .andExpect(jsonPath("$.data.token.accessToken").exists())
+                .andExpect(jsonPath("$.data.token.refreshToken").exists());
     }
 
     @Test
@@ -182,7 +182,7 @@ class AuthControllerTest {
         Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
         Map<String, Object> data = (Map<String, Object>) responseMap.get("data");
         Map<String, Object> token = (Map<String, Object>) data.get("token");
-        String accessToken = (String) token.get("access_token");
+        String accessToken = (String) token.get("accessToken");
 
         // 2. 획득한 토큰을 헤더에 담아 로그아웃 요청
         mockMvc.perform(post("/api/v1/auth/logout")

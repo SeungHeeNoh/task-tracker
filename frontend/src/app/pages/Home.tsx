@@ -35,9 +35,9 @@ export default function Home() {
     }
 
     if (inputValue.trim() && selectedGroup) {
-      // Find the index of the selected group to use as groupSeq (1-based index)
-      const groupIndex = groups.findIndex(g => g.id === selectedGroup.id);
-      const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
+      // Use the actual group id (which is the groupSeq stringified) if available, fallback to index
+      const groupSeqNumber = Number(selectedGroup.id);
+      const groupSeq = !isNaN(groupSeqNumber) ? groupSeqNumber : (groups.findIndex(g => g.id === selectedGroup.id) + 1 || 1);
 
       const success = await addItem(inputValue.trim(), selectedGroup, groupSeq, format(selectedDate, 'yyyy-MM-dd'));
       if (success) {

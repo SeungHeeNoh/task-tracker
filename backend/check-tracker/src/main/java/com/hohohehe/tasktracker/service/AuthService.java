@@ -11,7 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -23,17 +25,17 @@ public class AuthService {
     private final TokenProvider tokenProvider;
     private final RedisService redisService;
 
-    public Map<String, Map<String, Object>> getLoginResponse() {
+    public Map<String, Object> getLoginResponse() {
         Users currentUser = SecurityContext.getCurrentUser();
         String accessToken = tokenProvider.generateAccessToken(currentUser);
         String refreshToken = tokenProvider.generateRefreshToken(currentUser);
 
         redisService.saveUserCache(currentUser, UserToken.of(accessToken, refreshToken));
 
-        Map<String, Map<String, Object>> data = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
         Map<String, Object> token = new HashMap<>();
-        token.put("access_token", accessToken);
-        token.put("refresh_token", refreshToken);
+        token.put("accessToken", accessToken);
+        token.put("refreshToken", refreshToken);
         data.put("token", token);
 
         Map<String, Object> userInfo = new HashMap<>();
@@ -43,12 +45,15 @@ public class AuthService {
         userInfo.put("avatarImg", currentUser.getAvatarImg());
         data.put("userInfo", userInfo);
 
-        Map<String, Object> groupInfo = new HashMap<>();
+        List<Map<String, Object>> groupList = new ArrayList<>();
+
         for(Groups group : SecurityContext.getCurrentUser().getGroup()) {
+            Map<String, Object> groupInfo = new HashMap<>();
             groupInfo.put("groupSeq", group.getGroupSeq());
             groupInfo.put("groupName", group.getGroupName());
+            groupList.add(groupInfo);
         }
-        data.put("groupInfo", groupInfo);
+        data.put("groupList", groupList);
 
         return data;
     }

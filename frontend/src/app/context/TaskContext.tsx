@@ -130,6 +130,20 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
   const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem("refreshToken"));
+  const [groups, setGroups] = useState<Group[]>(() => {
+    const savedGroups = localStorage.getItem("taskGroups"); // changed key to avoid conflict with raw array
+    if (savedGroups) {
+      try {
+        const parsedGroups = JSON.parse(savedGroups);
+        if (Array.isArray(parsedGroups) && parsedGroups.length > 0) {
+          return parsedGroups;
+        }
+      } catch (e) {
+        console.error("Failed to parse saved groups:", e);
+      }
+    }
+    return predefinedGroups;
+  });
 
   const fetchTasks = async (viewMode: string) => {
     const token = localStorage.getItem("accessToken");
@@ -148,7 +162,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (result.status === 'SC') {
-        const defaultGroup = predefinedGroups.find(g => g.id === "other") || predefinedGroups[0];
+        const defaultGroup = groups.length > 0 ? groups[0] : predefinedGroups[0];
         const mappedItems = (result.data || []).map((task: any) => ({
           id: String(task.taskId),
           text: task.title,
@@ -191,20 +205,44 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       }
 
       const result = await response.json();
+      console.log("[DEBUG] Login API Response:", result);
 
       if (result.status === 'SC') {
+        const accessToken = result.data?.token?.accessToken || result.data?.accessToken;
+        const refreshToken = result.data?.token?.refreshToken || result.data?.refreshToken;
+
+        if (!accessToken) {
+          console.error("Token missing in response. Data:", result.data);
+          setError(`토큰 추출 실패. 응답 구조: ${JSON.stringify(result.data).slice(0, 100)}...`);
+          return false;
+        }
+
         setCurrentUser({
-          name: result.data?.userInfo?.userName || "Unknown User",
-          avatar: result.data?.userInfo?.avatarImg || "https://github.com/shadcn.png"
+          name: result.data?.userInfo?.userName || result.data?.userName || "Unknown User",
+          avatar: result.data?.userInfo?.avatarImg || result.data?.avatarImg || "https://github.com/shadcn.png"
         });
-        if (result.data?.token?.accessToken) {
-          setAccessToken(result.data.token.accessToken);
-          localStorage.setItem("accessToken", result.data.token.accessToken);
+
+        setAccessToken(accessToken);
+        localStorage.setItem("accessToken", accessToken);
+
+        if (refreshToken) {
+          setRefreshToken(refreshToken);
+          localStorage.setItem("refreshToken", refreshToken);
         }
-        if (result.data?.token?.refreshToken) {
-          setRefreshToken(result.data.token.refreshToken);
-          localStorage.setItem("refreshToken", result.data.token.refreshToken);
+
+        const groupInfo = result.data?.groupList || result.data?.groupInfo || result.data?.groups;
+        if (groupInfo) {
+          const groupArray = Array.isArray(groupInfo) ? groupInfo : [groupInfo];
+          const mappedGroups = groupArray.map((g: any, index: number) => ({
+            id: String(g.groupSeq || g.id || index + 1),
+            name: g.groupName || g.name || `Group ${index + 1}`,
+            color: predefinedGroups[index % predefinedGroups.length].color,
+            icon: predefinedGroups[index % predefinedGroups.length].icon,
+          }));
+          localStorage.setItem("taskGroups", JSON.stringify(mappedGroups));
+          setGroups(mappedGroups);
         }
+
         return true;
       } else {
         setError(result.message || "로그인에 실패했습니다.");
@@ -233,6 +271,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("taskTrackerViewMode");
+      localStorage.removeItem("groupInfo");
+      localStorage.removeItem("taskGroups");
+      setGroups(predefinedGroups);
 
       if (token && token !== "null" && token !== "undefined") {
         await fetch('/api/v1/auth/logout', {
@@ -336,8 +377,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const groupIndex = predefinedGroups.findIndex(g => g.id === group.id);
-      const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
+      const groupSeqNumber = Number(group.id);
+      const groupSeq = !isNaN(groupSeqNumber) ? groupSeqNumber : (groups.findIndex(g => g.id === group.id) !== -1 ? groups.findIndex(g => g.id === group.id) + 1 : 1);
 
       const response = await fetchWithAuth(`/api/v1/tasks/${id}`, {
         method: 'POST',
@@ -462,7 +503,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         toggleItem,
         deleteItem,
         getItemById,
-        groups: predefinedGroups,
+        groups: groups,
         fetchTasks,
         isLoading,
         error,

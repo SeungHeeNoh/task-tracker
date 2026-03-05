@@ -34,13 +34,13 @@ public class AuthController {
     private final UsersService usersService;
 
     @PostMapping("/login")
-    public CommonResponse<Map<String, Map<String, Object>>> login(@RequestBody LoginRequest loginRequest) {
+    public CommonResponse<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
         try {
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.userId(), loginRequest.password());
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            Map<String, Map<String, Object>> data = authService.getLoginResponse();
+            Map<String, Object> data = authService.getLoginResponse();
 
             return CommonResponse.success("로그인에 성공하였습니다.", data);
         } catch (BadCredentialsException e) {

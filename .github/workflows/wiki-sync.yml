@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'docs/wiki/**' # docs/wiki 폴더의 내용이 변경될 때만 실행
+  workflow_dispatch: # 수동으로 실행 가능하게 추가
 
 jobs:
   build:

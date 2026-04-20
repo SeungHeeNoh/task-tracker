@@ -78,4 +78,13 @@
             modified_at = NOW()
         WHERE user_seq = #{userSeq}
     </update>
+
+    <update id="modifyUserPassword" parameterType="com.hohohehe.tasktracker.model.entity.Users">
+        UPDATE users
+        SET
+        password = #{password},
+        modified_by = #{modifiedBy},
+        modified_at = NOW()
+        WHERE user_seq = #{userSeq}
+    </update>
 </mapper>

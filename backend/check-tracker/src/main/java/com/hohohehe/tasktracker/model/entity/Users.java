@@ -4,6 +4,7 @@ import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.model.dto.UserProfile;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.ModifyUserRequest;
+import com.hohohehe.tasktracker.model.dto.request.PasswordChangeRequest;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -57,6 +58,14 @@ public class Users implements UserDetails {
                 .userId(SecurityContext.getCurrentUser().getUserId())
                 .userName(modifyUserRequest.userName())
                 .avatarImg(modifyUserRequest.avatarImg())
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
+
+    public static Users of(String password) {
+        return Users.builder()
+                .userSeq(SecurityContext.getCurrentUser().getUserSeq())
+                .password(password)
                 .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
                 .build();
     }

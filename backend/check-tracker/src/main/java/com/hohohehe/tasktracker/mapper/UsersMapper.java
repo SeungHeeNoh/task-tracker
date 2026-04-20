@@ -13,4 +13,6 @@ public interface UsersMapper {
     void updateCreatorInfo(Users users);
 
     void modifyUser(Users users);
+
+    void modifyUserPassword(Users users);
 }

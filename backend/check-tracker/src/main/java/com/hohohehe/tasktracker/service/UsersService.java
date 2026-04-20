@@ -1,7 +1,9 @@
 package com.hohohehe.tasktracker.service;
 
+import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.common.exception.SystemException;
 import com.hohohehe.tasktracker.mapper.UsersMapper;
+import com.hohohehe.tasktracker.model.dto.request.PasswordChangeRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsersService implements UserDetailsService {
 
     private final UsersMapper usersMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
@@ -46,10 +50,21 @@ public class UsersService implements UserDetailsService {
 
     public void modifyUser(Users users) {
         try {
-            if (usersMapper.findByUserId(users.getUserId()) == null) {
-                throw new IllegalArgumentException("잘못된 접근입니다.");
-            }
             usersMapper.modifyUser(users);
+        } catch (DataAccessException | PersistenceException e) {
+            throw new SystemException(e, "잠시 후 다시 시도해주세요.");
+        }
+    }
+
+    public void changePassword(PasswordChangeRequest passwordChangeRequest) {
+        try {
+            Users dbUser = usersMapper.findByUserId(SecurityContext.getCurrentUser().getUserId());
+
+            if (!passwordEncoder.matches(passwordChangeRequest.prevPassword(), dbUser.getPassword())) {
+                throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+            }
+
+            usersMapper.modifyUserPassword(Users.of(passwordEncoder.encode(passwordChangeRequest.password())));
         } catch (DataAccessException | PersistenceException e) {
             throw new SystemException(e, "잠시 후 다시 시도해주세요.");
         }

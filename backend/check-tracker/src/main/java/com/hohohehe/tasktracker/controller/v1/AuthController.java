@@ -5,6 +5,7 @@ import com.hohohehe.tasktracker.common.exception.SystemException;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
+import com.hohohehe.tasktracker.model.dto.request.PasswordChangeRequest;
 import com.hohohehe.tasktracker.model.dto.request.ReissueRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
 import com.hohohehe.tasktracker.service.AuthService;
@@ -16,10 +17,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 

@@ -15,7 +15,6 @@
         <collection property="group" ofType="com.hohohehe.tasktracker.model.entity.Groups">
             <id property="groupSeq" column="group_seq"/>
             <result property="groupName" column="group_name"/>
-            <result property="role" column="role"/>
             <result property="createdAt" column="group_created_at"/>
             <result property="createdBy" column="group_created_by"/>
             <result property="updatedAt" column="group_modified_at"/>

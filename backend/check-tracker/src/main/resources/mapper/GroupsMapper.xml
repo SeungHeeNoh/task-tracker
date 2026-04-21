@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hohohehe.tasktracker.mapper.GroupsMapper">
+
+    <resultMap id="GroupsResultMap" type="com.hohohehe.tasktracker.model.entity.Groups">
+        <id property="groupSeq" column="group_seq"/>
+        <result property="groupName" column="group_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="updatedAt" column="modified_at"/>
+        <result property="updatedBy" column="modified_by"/>
+    </resultMap>
+
+    <select id="findBySeq" resultMap="GroupsResultMap">
+        SELECT
+            group_seq,
+            group_name,
+            created_at,
+            created_by,
+            modified_at,
+            modified_by
+        FROM `groups`
+        WHERE group_seq = #{groupSeq}
+    </select>
+</mapper>

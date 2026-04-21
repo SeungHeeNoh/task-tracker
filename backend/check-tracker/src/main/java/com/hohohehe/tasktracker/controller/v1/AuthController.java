@@ -1,11 +1,10 @@
 package com.hohohehe.tasktracker.controller.v1;
 
-import com.hohohehe.tasktracker.common.SecurityContext;
-import com.hohohehe.tasktracker.common.exception.SystemException;
+import com.hohohehe.tasktracker.common.enumCode.ErrorCode;
+import com.hohohehe.tasktracker.common.exception.JwtAuthenticationException;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
 import com.hohohehe.tasktracker.model.dto.request.LoginRequest;
-import com.hohohehe.tasktracker.model.dto.request.PasswordChangeRequest;
 import com.hohohehe.tasktracker.model.dto.request.ReissueRequest;
 import com.hohohehe.tasktracker.model.entity.Users;
 import com.hohohehe.tasktracker.service.AuthService;
@@ -17,7 +16,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
@@ -42,7 +44,7 @@ public class AuthController {
 
             return CommonResponse.success("로그인에 성공하였습니다.", data);
         } catch (BadCredentialsException e) {
-            return CommonResponse.fail("아이디 또는 비밀번호가 일치하지 않습니다.");
+            return CommonResponse.fail(ErrorCode.AUTH_LOGIN_FAILED);
         }
     }
 
@@ -51,8 +53,10 @@ public class AuthController {
         try {
             joinRequest.checkValidation();
             usersService.join(Users.from(joinRequest));
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return CommonResponse.fail(e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
         return CommonResponse.success("회원가입에 성공했습니다.\n 로그인해주세요.");
@@ -66,11 +70,13 @@ public class AuthController {
             Map<String, Object> data = authService.getNewAccessTokenResponse(refreshToken);
 
             return CommonResponse.success("토큰 재발급에 성공하였습니다.", data);
-        } catch (SystemException | IllegalArgumentException e) {
-            return CommonResponse.fail(e.getMessage());
+        } catch (JwtAuthenticationException e) {
+            return CommonResponse.fail(e.getErrorCode());
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
             log.error("토큰 재발급 중 오류 발생: ", e);
-            return CommonResponse.fail("토큰 재발급 중 오류가 발생했습니다.");
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -80,7 +86,7 @@ public class AuthController {
             authService.logout();
             return CommonResponse.success("로그아웃 되었습니다.");
         } catch (Exception e) {
-            return CommonResponse.fail("로그아웃 처리 중 오류가 발생했습니다.");
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 }

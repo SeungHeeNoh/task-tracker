@@ -1,6 +1,8 @@
 package com.hohohehe.tasktracker.service;
 
 import com.hohohehe.tasktracker.common.SecurityContext;
+import com.hohohehe.tasktracker.common.enumCode.ErrorCode;
+import com.hohohehe.tasktracker.common.exception.JwtAuthenticationException;
 import com.hohohehe.tasktracker.common.exception.SystemException;
 import com.hohohehe.tasktracker.config.jwt.TokenProvider;
 import com.hohohehe.tasktracker.model.dto.UserToken;
@@ -58,16 +60,21 @@ public class AuthService {
         return data;
     }
 
-    public Map<String, Object> getNewAccessTokenResponse(String refreshToken) throws SystemException {
-        if(!tokenProvider.validToken(refreshToken)) {
-            throw new SystemException("유효하지 않은 토큰입니다.");
+    public Map<String, Object> getNewAccessTokenResponse(String refreshToken) {
+        try {
+            tokenProvider.validToken(refreshToken);
+        } catch (JwtAuthenticationException e) {
+            if (e.getErrorCode() == ErrorCode.AUTH_TOKEN_EXPIRED) {
+                throw new JwtAuthenticationException(ErrorCode.AUTH_REFRESH_TOKEN_EXPIRED);
+            }
+            throw new JwtAuthenticationException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
         }
 
         String userId = tokenProvider.getUserId(refreshToken);
         UserToken cachedToken = redisService.getUserTokenCache(userId);
 
         if (cachedToken == null || !cachedToken.getRefreshToken().equals(refreshToken)) {
-            throw new SystemException("잘못된 접근입니다.");
+            throw new JwtAuthenticationException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
         }
 
         Users user = (Users) usersService.loadUserByUsername(userId);

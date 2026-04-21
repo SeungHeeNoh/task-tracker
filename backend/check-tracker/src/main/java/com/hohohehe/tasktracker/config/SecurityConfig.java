@@ -2,6 +2,7 @@ package com.hohohehe.tasktracker.config;
 
 
 import com.hohohehe.tasktracker.config.jwt.JWTAuthenticationFilter;
+import com.hohohehe.tasktracker.config.jwt.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,6 +32,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .build();
     }
 

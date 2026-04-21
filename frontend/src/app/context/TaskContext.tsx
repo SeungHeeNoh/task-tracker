@@ -68,59 +68,86 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 
   let response = await fetch(url, { ...options, headers });
 
+  const logoutAndRedirect = (msg?: string) => {
+    if (msg) alert(msg);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("taskGroups");
+    localStorage.removeItem("taskTrackerViewMode");
+    window.location.href = '/login';
+  };
+
   if (response.status === 401) {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (refreshToken && refreshToken !== "null" && refreshToken !== "undefined") {
-      try {
-        const reissueRes = await fetch('/api/v1/auth/reissue', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken })
-        });
+    let errBody: any = {};
+    try { errBody = await response.clone().json(); } catch(e) {}
+    const code = errBody.code;
+    const msg = errBody.message || "인증이 만료되었습니다. 다시 로그인해주세요.";
 
-        const reissueData = await reissueRes.json();
+    if (code === 'AUTH_TOKEN_EXPIRED') {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken && refreshToken !== "null" && refreshToken !== "undefined") {
+        try {
+          const reissueRes = await fetch('/api/v1/auth/reissue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+          });
+          const reissueData = await reissueRes.json();
 
-        if (reissueRes.ok && reissueData.status === 'SC' && reissueData.data?.accessToken) {
-          const newAccessToken = reissueData.data.accessToken;
-          localStorage.setItem("accessToken", newAccessToken);
+          if (reissueRes.ok && reissueData.status === 'SC' && reissueData.data?.accessToken) {
+            const newAccessToken = reissueData.data.accessToken;
+            localStorage.setItem("accessToken", newAccessToken);
+            headers.set('X-AccessToken', `Bearer ${newAccessToken}`);
+            response = await fetch(url, { ...options, headers });
 
-          headers.set('X-AccessToken', `Bearer ${newAccessToken}`);
-          response = await fetch(url, { ...options, headers });
-
-          if (response.status === 401) {
-            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            window.location.href = '/login';
+            if (response.status === 401) {
+              logoutAndRedirect("재발급된 토큰으로도 인증에 실패했습니다.");
+              throw new Error('SessionExpiredRedirect');
+            }
+          } else {
+            if (reissueData.code === 'AUTH_REFRESH_TOKEN_EXPIRED' || reissueData.code === 'AUTH_INVALID_REFRESH_TOKEN') {
+              logoutAndRedirect(reissueData.message || "리프레시 토큰이 무효합니다. 다시 로그인해주세요.");
+            } else {
+              logoutAndRedirect("세션이 만료되었습니다. 다시 로그인해주세요.");
+            }
             throw new Error('SessionExpiredRedirect');
           }
-        } else {
-          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = '/login';
-          throw new Error('SessionExpiredRedirect');
+        } catch (e) {
+          if ((e as Error).message !== 'SessionExpiredRedirect') {
+            logoutAndRedirect("서버 통신 오류가 발생했습니다. 다시 로그인해주세요.");
+          }
+          throw e;
         }
-      } catch (e) {
-        if ((e as Error).message !== 'SessionExpiredRedirect') {
-          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = '/login';
-        }
-        throw e;
+      } else {
+        logoutAndRedirect(msg);
+        throw new Error('SessionExpiredRedirect');
       }
+    } else if (code === 'AUTH_INVALID_TOKEN' || code === 'AUTH_SESSION_EXPIRED') {
+      logoutAndRedirect(msg);
+      throw new Error('SessionExpiredRedirect');
+    } else if (code === 'AUTH_REFRESH_TOKEN_EXPIRED' || code === 'AUTH_INVALID_REFRESH_TOKEN') {
+      logoutAndRedirect(msg);
+      throw new Error('SessionExpiredRedirect');
     } else {
-      alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      window.location.href = '/login';
+      logoutAndRedirect(msg);
       throw new Error('SessionExpiredRedirect');
     }
   } else if (response.status === 404) {
     window.location.href = '/404';
+  } else if (response.ok || response.status === 500) {
+    let resBody: any = {};
+    try { resBody = await response.clone().json(); } catch(e) {}
+    
+    if (resBody.status === 'FA' || response.status === 500) {
+       if (resBody.code === 'USER_ACCESS_DENIED' || resBody.code === 'TASK_ACCESS_DENIED') {
+          alert(resBody.message || "잘못된 접근입니다.");
+          window.history.back();
+          throw new Error('SessionExpiredRedirect'); // Prevent duplicate alerts
+       } else if (resBody.code === 'INTERNAL_SERVER_ERROR' || response.status === 500) {
+          alert(resBody.message || "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+       }
+    }
   }
 
   return response;
@@ -190,6 +217,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   };
 
   const [currentUser, setCurrentUser] = useState<{ seq: string; name: string; avatar: string } | null>(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token || token === "null" || token === "undefined") {
+      return null;
+    }
     const saved = localStorage.getItem("currentUser");
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { }

@@ -1,6 +1,7 @@
 package com.hohohehe.tasktracker.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.hohohehe.tasktracker.common.enumCode.ErrorCode;
 import com.hohohehe.tasktracker.common.enumCode.ResponseStatus;
 import lombok.*;
 
@@ -13,6 +14,7 @@ import lombok.*;
 public class CommonResponse<T> { // 클래스 레벨에 <T> 선언
 
     private ResponseStatus status; // SC 또는 FA
+    private String code;
     private String message;
     private T data;         // 제네릭 타입 T를 사용하여 다양한 객체 수용
 
@@ -31,10 +33,19 @@ public class CommonResponse<T> { // 클래스 레벨에 <T> 선언
                 .build();
     }
 
-    public static <T> CommonResponse<T> fail(String message) {
+    public static <T> CommonResponse<T> fail(ErrorCode errorCode, String message) {
         return CommonResponse.<T>builder()
                 .status(ResponseStatus.FA)
+                .code(errorCode.name())
                 .message(message)
+                .build();
+    }
+
+    public static <T> CommonResponse<T> fail(ErrorCode errorCode) {
+        return CommonResponse.<T>builder()
+                .status(ResponseStatus.FA)
+                .code(errorCode.name())
+                .message(errorCode.getMessage())
                 .build();
     }
 }

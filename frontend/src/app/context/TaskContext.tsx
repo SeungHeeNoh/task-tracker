@@ -54,6 +54,7 @@ interface TaskContextType {
   logout: () => Promise<void> | void;
   signup: (userData: { userId: string; userName: string; password: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
   updateProfile: (userData: { userName: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
+  changePassword: (prevPassword: string, password: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -344,7 +345,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       if (!currentUser?.seq) {
-        throw new Error("사용자 시퀀스 정보가 없습니다. 다시 로그인해 주세요.");
+        throw new Error("로그인 정보가 없습니다. 다시 로그인해 주세요.");
       }
 
       const response = await fetchWithAuth(`/api/v1/users/${currentUser.seq}/modify`, {
@@ -390,6 +391,48 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       console.error("Profile update failed:", e);
       setError(e.message || "프로필 수정 중 오류가 발생했습니다.");
       return { success: false, message: e.message || "프로필 수정 중 오류가 발생했습니다." };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const changePassword = async (prevPassword: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!currentUser?.seq) {
+        throw new Error("로그인 정보가 없습니다. 다시 로그인해 주세요.");
+      }
+
+      const response = await fetchWithAuth(`/api/v1/users/${currentUser.seq}/password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prevPassword, password }),
+      });
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (e) {
+        result = null;
+      }
+
+      if (!response.ok) {
+        throw new Error(result?.message || `서버 오류가 발생했습니다. (상태 코드: ${response.status})`);
+      }
+
+      if (result.status === 'SC') {
+        return { success: true };
+      } else {
+        setError(result?.message || "비밀번호 변경에 실패했습니다.");
+        return { success: false, message: result?.message || "비밀번호 변경에 실패했습니다." };
+      }
+    } catch (e: any) {
+      console.error("Password change failed:", e);
+      setError(e.message || "비밀번호 변경 중 오류가 발생했습니다.");
+      return { success: false, message: e.message || "비밀번호 변경 중 오류가 발생했습니다." };
     } finally {
       setIsLoading(false);
     }
@@ -579,7 +622,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         signup,
-        updateProfile
+        updateProfile,
+        changePassword
       }}
     >
       {children}

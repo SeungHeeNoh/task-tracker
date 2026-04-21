@@ -13,13 +13,14 @@ spring:
     name: check-tracker
   datasource:
     hikari:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://localhost:3300/taskTracker?serverTimezone=Asia/Seoul
-      username: taskTracker
-      password: taskTracker
-      maximum-pool-size: 20
-      connection-timeout: 30000
-      max-lifetime: 1800000
+      driver-class-name: org.h2.Driver
+      jdbc-url: jdbc:h2:mem:taskTracker;MODE=MySQL;DB_CLOSE_DELAY=-1
+      username: sa
+      password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/ddl.sql
   data:
     redis:
       host: localhost

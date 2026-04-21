@@ -46,12 +46,15 @@ interface TaskContextType {
   error: string | null;
   groups: Group[];
   currentUser: {
+    seq: string;
     name: string;
     avatar: string;
   } | null;
   login: (userId: string, password: string) => Promise<boolean>;
   logout: () => Promise<void> | void;
   signup: (userData: { userId: string; userName: string; password: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
+  updateProfile: (userData: { userName: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
+  changePassword: (prevPassword: string, password: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -65,59 +68,86 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 
   let response = await fetch(url, { ...options, headers });
 
-  if (response.status === 401 || response.status === 403) {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (refreshToken && refreshToken !== "null" && refreshToken !== "undefined") {
-      try {
-        const reissueRes = await fetch('/api/v1/auth/reissue', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken })
-        });
+  const logoutAndRedirect = (msg?: string) => {
+    if (msg) alert(msg);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("taskGroups");
+    localStorage.removeItem("taskTrackerViewMode");
+    window.location.href = '/login';
+  };
 
-        const reissueData = await reissueRes.json();
+  if (response.status === 401) {
+    let errBody: any = {};
+    try { errBody = await response.clone().json(); } catch(e) {}
+    const code = errBody.code;
+    const msg = errBody.message || "인증이 만료되었습니다. 다시 로그인해주세요.";
 
-        if (reissueRes.ok && reissueData.status === 'SC' && reissueData.data?.accessToken) {
-          const newAccessToken = reissueData.data.accessToken;
-          localStorage.setItem("accessToken", newAccessToken);
+    if (code === 'AUTH_TOKEN_EXPIRED') {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken && refreshToken !== "null" && refreshToken !== "undefined") {
+        try {
+          const reissueRes = await fetch('/api/v1/auth/reissue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+          });
+          const reissueData = await reissueRes.json();
 
-          headers.set('X-AccessToken', `Bearer ${newAccessToken}`);
-          response = await fetch(url, { ...options, headers });
+          if (reissueRes.ok && reissueData.status === 'SC' && reissueData.data?.accessToken) {
+            const newAccessToken = reissueData.data.accessToken;
+            localStorage.setItem("accessToken", newAccessToken);
+            headers.set('X-AccessToken', `Bearer ${newAccessToken}`);
+            response = await fetch(url, { ...options, headers });
 
-          if (response.status === 401 || response.status === 403) {
-            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            window.location.href = '/login';
+            if (response.status === 401) {
+              logoutAndRedirect("재발급된 토큰으로도 인증에 실패했습니다.");
+              throw new Error('SessionExpiredRedirect');
+            }
+          } else {
+            if (reissueData.code === 'AUTH_REFRESH_TOKEN_EXPIRED' || reissueData.code === 'AUTH_INVALID_REFRESH_TOKEN') {
+              logoutAndRedirect(reissueData.message || "리프레시 토큰이 무효합니다. 다시 로그인해주세요.");
+            } else {
+              logoutAndRedirect("세션이 만료되었습니다. 다시 로그인해주세요.");
+            }
             throw new Error('SessionExpiredRedirect');
           }
-        } else {
-          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = '/login';
-          throw new Error('SessionExpiredRedirect');
+        } catch (e) {
+          if ((e as Error).message !== 'SessionExpiredRedirect') {
+            logoutAndRedirect("서버 통신 오류가 발생했습니다. 다시 로그인해주세요.");
+          }
+          throw e;
         }
-      } catch (e) {
-        if ((e as Error).message !== 'SessionExpiredRedirect') {
-          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = '/login';
-        }
-        throw e;
+      } else {
+        logoutAndRedirect(msg);
+        throw new Error('SessionExpiredRedirect');
       }
+    } else if (code === 'AUTH_INVALID_TOKEN' || code === 'AUTH_SESSION_EXPIRED') {
+      logoutAndRedirect(msg);
+      throw new Error('SessionExpiredRedirect');
+    } else if (code === 'AUTH_REFRESH_TOKEN_EXPIRED' || code === 'AUTH_INVALID_REFRESH_TOKEN') {
+      logoutAndRedirect(msg);
+      throw new Error('SessionExpiredRedirect');
     } else {
-      alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      window.location.href = '/login';
+      logoutAndRedirect(msg);
       throw new Error('SessionExpiredRedirect');
     }
   } else if (response.status === 404) {
     window.location.href = '/404';
+  } else if (response.ok || response.status === 500) {
+    let resBody: any = {};
+    try { resBody = await response.clone().json(); } catch(e) {}
+    
+    if (resBody.status === 'FA' || response.status === 500) {
+       if (resBody.code === 'USER_ACCESS_DENIED' || resBody.code === 'TASK_ACCESS_DENIED') {
+          alert(resBody.message || "잘못된 접근입니다.");
+          window.history.back();
+          throw new Error('SessionExpiredRedirect'); // Prevent duplicate alerts
+       } else if (resBody.code === 'INTERNAL_SERVER_ERROR' || response.status === 500) {
+          alert(resBody.message || "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+       }
+    }
   }
 
   return response;
@@ -130,6 +160,20 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
   const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem("refreshToken"));
+  const [groups, setGroups] = useState<Group[]>(() => {
+    const savedGroups = localStorage.getItem("taskGroups"); // changed key to avoid conflict with raw array
+    if (savedGroups) {
+      try {
+        const parsedGroups = JSON.parse(savedGroups);
+        if (Array.isArray(parsedGroups) && parsedGroups.length > 0) {
+          return parsedGroups;
+        }
+      } catch (e) {
+        console.error("Failed to parse saved groups:", e);
+      }
+    }
+    return predefinedGroups;
+  });
 
   const fetchTasks = async (viewMode: string) => {
     const token = localStorage.getItem("accessToken");
@@ -148,7 +192,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (result.status === 'SC') {
-        const defaultGroup = predefinedGroups.find(g => g.id === "other") || predefinedGroups[0];
+        const defaultGroup = groups.length > 0 ? groups[0] : predefinedGroups[0];
         const mappedItems = (result.data || []).map((task: any) => ({
           id: String(task.taskId),
           text: task.title,
@@ -172,7 +216,17 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const [currentUser, setCurrentUser] = useState<{ name: string; avatar: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ seq: string; name: string; avatar: string } | null>(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token || token === "null" || token === "undefined") {
+      return null;
+    }
+    const saved = localStorage.getItem("currentUser");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { }
+    }
+    return null;
+  });
 
   const login = async (userId: string, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -191,20 +245,47 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       }
 
       const result = await response.json();
+      console.log("[DEBUG] Login API Response:", result);
 
       if (result.status === 'SC') {
-        setCurrentUser({
-          name: result.data?.userName || "Unknown User",
-          avatar: result.data?.avatarImg || "https://github.com/shadcn.png"
-        });
-        if (result.data?.accessToken) {
-          setAccessToken(result.data.accessToken);
-          localStorage.setItem("accessToken", result.data.accessToken);
+        const accessToken = result.data?.token?.accessToken || result.data?.accessToken;
+        const refreshToken = result.data?.token?.refreshToken || result.data?.refreshToken;
+
+        if (!accessToken) {
+          console.error("Token missing in response. Data:", result.data);
+          setError(`토큰 추출 실패. 응답 구조: ${JSON.stringify(result.data).slice(0, 100)}...`);
+          return false;
         }
-        if (result.data?.refreshToken) {
-          setRefreshToken(result.data.refreshToken);
-          localStorage.setItem("refreshToken", result.data.refreshToken);
+
+        const userObj = {
+          seq: result.data?.userInfo?.userSeq || result.data?.userSeq || "",
+          name: result.data?.userInfo?.userName || result.data?.userName || "Unknown User",
+          avatar: result.data?.userInfo?.avatarImg || result.data?.avatarImg || "https://github.com/shadcn.png"
+        };
+        setCurrentUser(userObj);
+        localStorage.setItem("currentUser", JSON.stringify(userObj));
+
+        setAccessToken(accessToken);
+        localStorage.setItem("accessToken", accessToken);
+
+        if (refreshToken) {
+          setRefreshToken(refreshToken);
+          localStorage.setItem("refreshToken", refreshToken);
         }
+
+        const groupInfo = result.data?.groupList || result.data?.groupInfo || result.data?.groups;
+        if (groupInfo) {
+          const groupArray = Array.isArray(groupInfo) ? groupInfo : [groupInfo];
+          const mappedGroups = groupArray.map((g: any, index: number) => ({
+            id: String(g.groupSeq || g.id || index + 1),
+            name: g.groupName || g.name || `Group ${index + 1}`,
+            color: predefinedGroups[index % predefinedGroups.length].color,
+            icon: predefinedGroups[index % predefinedGroups.length].icon,
+          }));
+          localStorage.setItem("taskGroups", JSON.stringify(mappedGroups));
+          setGroups(mappedGroups);
+        }
+
         return true;
       } else {
         setError(result.message || "로그인에 실패했습니다.");
@@ -233,6 +314,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("taskTrackerViewMode");
+      localStorage.removeItem("groupInfo");
+      localStorage.removeItem("taskGroups");
+      localStorage.removeItem("currentUser");
+      setGroups(predefinedGroups);
 
       if (token && token !== "null" && token !== "undefined") {
         await fetch('/api/v1/auth/logout', {
@@ -281,6 +366,104 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       console.error("Signup failed:", e);
       setError(e.message || "회원가입 중 오류가 발생했습니다.");
       return { success: false, message: e.message || "회원가입 중 오류가 발생했습니다." };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProfile = async (userData: { userName: string; avatarImg?: string }): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!currentUser?.seq) {
+        throw new Error("로그인 정보가 없습니다. 다시 로그인해 주세요.");
+      }
+
+      const response = await fetchWithAuth(`/api/v1/users/${currentUser.seq}/modify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      let result;
+      // Try to parse JSON even if status is not OK to get the backend's error message
+      try {
+        result = await response.json();
+      } catch (e) {
+        result = null;
+      }
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(result?.message || "권한이 없습니다. (403 Forbidden)");
+        }
+        throw new Error(result?.message || `서버 오류가 발생했습니다. (상태 코드: ${response.status})`);
+      }
+
+      if (result.status === 'SC') {
+        // Update local state to reflect the changes immediately
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            name: userData.userName,
+            avatar: userData.avatarImg ? `data:image/jpeg;base64,${userData.avatarImg}` : currentUser.avatar
+          };
+          setCurrentUser(updatedUser);
+          localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+        }
+        return { success: true };
+      } else {
+        setError(result?.message || "프로필 정보 수정에 실패했습니다.");
+        return { success: false, message: result?.message || "프로필 정보 수정에 실패했습니다." };
+      }
+    } catch (e: any) {
+      console.error("Profile update failed:", e);
+      setError(e.message || "프로필 수정 중 오류가 발생했습니다.");
+      return { success: false, message: e.message || "프로필 수정 중 오류가 발생했습니다." };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const changePassword = async (prevPassword: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!currentUser?.seq) {
+        throw new Error("로그인 정보가 없습니다. 다시 로그인해 주세요.");
+      }
+
+      const response = await fetchWithAuth(`/api/v1/users/${currentUser.seq}/password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prevPassword, password }),
+      });
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (e) {
+        result = null;
+      }
+
+      if (!response.ok) {
+        throw new Error(result?.message || `서버 오류가 발생했습니다. (상태 코드: ${response.status})`);
+      }
+
+      if (result.status === 'SC') {
+        return { success: true };
+      } else {
+        setError(result?.message || "비밀번호 변경에 실패했습니다.");
+        return { success: false, message: result?.message || "비밀번호 변경에 실패했습니다." };
+      }
+    } catch (e: any) {
+      console.error("Password change failed:", e);
+      setError(e.message || "비밀번호 변경 중 오류가 발생했습니다.");
+      return { success: false, message: e.message || "비밀번호 변경 중 오류가 발생했습니다." };
     } finally {
       setIsLoading(false);
     }
@@ -336,8 +519,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const groupIndex = predefinedGroups.findIndex(g => g.id === group.id);
-      const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
+      const groupSeqNumber = Number(group.id);
+      const groupSeq = !isNaN(groupSeqNumber) ? groupSeqNumber : (groups.findIndex(g => g.id === group.id) !== -1 ? groups.findIndex(g => g.id === group.id) + 1 : 1);
 
       const response = await fetchWithAuth(`/api/v1/tasks/${id}`, {
         method: 'POST',
@@ -462,14 +645,16 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         toggleItem,
         deleteItem,
         getItemById,
-        groups: predefinedGroups,
+        groups: groups,
         fetchTasks,
         isLoading,
         error,
         currentUser,
         login,
         logout,
-        signup
+        signup,
+        updateProfile,
+        changePassword
       }}
     >
       {children}

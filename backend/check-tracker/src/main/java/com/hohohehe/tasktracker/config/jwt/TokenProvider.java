@@ -1,5 +1,6 @@
 package com.hohohehe.tasktracker.config.jwt;
 
+import com.hohohehe.tasktracker.common.enumCode.ErrorCode;
 import com.hohohehe.tasktracker.common.exception.JwtAuthenticationException;
 import com.hohohehe.tasktracker.model.entity.Users;
 import io.jsonwebtoken.*;
@@ -52,22 +53,10 @@ public class TokenProvider {
         return getClaims(token).getSubject();
     }
 
-    public boolean validToken(String token) {
-        try {
-            getClaims(token);
+    public boolean validToken(String token) throws JwtAuthenticationException {
+        getClaims(token);
 
-            return true;
-        } catch (SecurityException | MalformedJwtException e) {
-            log.warn("Invalid JWT signature.");
-        } catch (ExpiredJwtException e) {
-            log.warn("Expired JWT token.");
-        } catch (UnsupportedJwtException e) {
-            log.warn("Unsupported JWT token.");
-        } catch (IllegalArgumentException e) {
-            log.warn("JWT claims string is empty.");
-        }
-
-        return false;
+        return true;
     }
 
     private Claims getClaims(String token) {
@@ -80,15 +69,20 @@ public class TokenProvider {
                     .getBody();
 
         } catch (SecurityException | MalformedJwtException e) {
-            throw new JwtAuthenticationException("Invalid JWT signature.");
+            log.warn("Invalid JWT signature.");
+            throw new JwtAuthenticationException(ErrorCode.AUTH_INVALID_TOKEN);
         } catch (ExpiredJwtException e) {
-            throw new JwtAuthenticationException("Expired JWT token.");
+            log.warn("Expired JWT token.");
+            throw new JwtAuthenticationException(ErrorCode.AUTH_TOKEN_EXPIRED);
         } catch (UnsupportedJwtException e) {
-            throw new JwtAuthenticationException("Unsupported JWT token.");
+            log.warn("Unsupported JWT token.");
+            throw new JwtAuthenticationException(ErrorCode.AUTH_INVALID_TOKEN);
         } catch (IllegalArgumentException e) {
-            throw new JwtAuthenticationException("JWT claims string is empty.");
+            log.warn("JWT claims string is empty.");
+            throw new JwtAuthenticationException(ErrorCode.AUTH_INVALID_TOKEN);
         } catch (IncorrectClaimException e) {
-            throw new JwtAuthenticationException("JWT claims is not correct.");
+            log.warn("JWT claims is not correct.");
+            throw new JwtAuthenticationException(ErrorCode.AUTH_INVALID_TOKEN);
         }
     }
 }

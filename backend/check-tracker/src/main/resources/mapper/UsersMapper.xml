@@ -46,7 +46,7 @@
     </select>
 
     <insert id="joinUser" parameterType="com.hohohehe.tasktracker.model.entity.Users" useGeneratedKeys="true" keyProperty="userSeq">
-        INSERT INTO `users`
+        INSERT INTO users
             (user_id, user_name, password, avatar_img, created_at, created_by, modified_at, modified_by)
         VALUES (#{userId},
                 #{userName},
@@ -59,9 +59,32 @@
     </insert>
 
     <update id="updateCreatorInfo" parameterType="com.hohohehe.tasktracker.model.entity.Users">
-        UPDATE `users`
+        UPDATE users
         SET created_by  = #{userSeq},
             modified_by = #{userSeq}
+        WHERE user_seq = #{userSeq}
+    </update>
+
+    <update id="modifyUser" parameterType="com.hohohehe.tasktracker.model.entity.Users">
+        UPDATE users
+        SET
+            <if test="userName != null and userName != ''">
+                user_name = #{userName},
+            </if>
+            <if test="avatarImg != null and avatarImg != ''">
+                avatar_img = #{avatarImg},
+            </if>
+            modified_by = #{modifiedBy},
+            modified_at = NOW()
+        WHERE user_seq = #{userSeq}
+    </update>
+
+    <update id="modifyUserPassword" parameterType="com.hohohehe.tasktracker.model.entity.Users">
+        UPDATE users
+        SET
+        password = #{password},
+        modified_by = #{modifiedBy},
+        modified_at = NOW()
         WHERE user_seq = #{userSeq}
     </update>
 </mapper>

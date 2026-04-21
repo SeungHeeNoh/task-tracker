@@ -1,8 +1,8 @@
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS group;
 DROP TABLE IF EXISTS user_group_map;
-DROP TABLE IF EXISTS user_taskgroup_map;
 DROP TABLE IF EXISTS task_log;
+DROP TABLE IF EXISTS task;
+DROP TABLE IF EXISTS `groups`;
+DROP TABLE IF EXISTS users;
 
 CREATE TABLE `users`
 (

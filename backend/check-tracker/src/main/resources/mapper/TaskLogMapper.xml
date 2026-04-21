@@ -9,7 +9,7 @@
          created_at,
          created_by
         )
-        VALUE
+        VALUES
         (
          #{taskId},
          #{taskStatus},

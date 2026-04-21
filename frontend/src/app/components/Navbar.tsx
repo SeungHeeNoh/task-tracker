@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 import { useTask } from "../context/TaskContext";
 import { Button } from "./ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { LogOut } from "lucide-react";
+import { LogOut, User, Key } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -50,7 +50,16 @@ export function Navbar() {
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                        <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>Profile</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/profile/password")} className="cursor-pointer">
+                            <Key className="mr-2 h-4 w-4" />
+                            <span>Change Password</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer">
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Log out</span>
                         </DropdownMenuItem>

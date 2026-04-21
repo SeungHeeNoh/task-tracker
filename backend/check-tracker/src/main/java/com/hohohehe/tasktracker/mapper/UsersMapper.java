@@ -11,4 +11,8 @@ public interface UsersMapper {
     void joinUser(Users users);
 
     void updateCreatorInfo(Users users);
+
+    void modifyUser(Users users);
+
+    void modifyUserPassword(Users users);
 }

@@ -1,5 +1,6 @@
 package com.hohohehe.tasktracker.controller.v1;
 
+import com.hohohehe.tasktracker.common.enumCode.ErrorCode;
 import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.model.dto.TaskDetail;
 import com.hohohehe.tasktracker.model.dto.TaskInfo;
@@ -31,8 +32,10 @@ public class TaskController {
             }
 
             return taskService.getTaskList(taskListRequest.viewMode());
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return CommonResponse.fail(e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -42,8 +45,10 @@ public class TaskController {
             addTaskRequest.checkValidation();
 
             return taskService.addTask(Task.from(addTaskRequest));
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return CommonResponse.fail(e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -53,8 +58,10 @@ public class TaskController {
             modifyTaskRequest.checkValidation();
 
             return taskService.modifyTask(Task.of(taskId, modifyTaskRequest));
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return CommonResponse.fail(e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -62,8 +69,10 @@ public class TaskController {
     public CommonResponse<Void> deleteTask(@PathVariable Long taskId) {
         try {
             return taskService.deleteTask(Task.of(taskId));
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return CommonResponse.fail(e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -71,8 +80,10 @@ public class TaskController {
     public CommonResponse<Void> changeStatus(@PathVariable Long taskId) {
         try {
             return taskService.changeStatus(taskId);
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return CommonResponse.fail(e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -80,8 +91,10 @@ public class TaskController {
     public CommonResponse<TaskDetail> getTaskDetail(@PathVariable Long taskId) {
         try {
             return taskService.getTaskDetail(taskId);
+        } catch (IllegalArgumentException e) {
+            return CommonResponse.fail(ErrorCode.INVALID_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return CommonResponse.fail(e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 }

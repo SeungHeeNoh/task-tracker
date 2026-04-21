@@ -1,7 +1,10 @@
 package com.hohohehe.tasktracker.model.entity;
 
+import com.hohohehe.tasktracker.common.SecurityContext;
 import com.hohohehe.tasktracker.model.dto.UserProfile;
 import com.hohohehe.tasktracker.model.dto.request.JoinRequest;
+import com.hohohehe.tasktracker.model.dto.request.ModifyUserRequest;
+import com.hohohehe.tasktracker.model.dto.request.PasswordChangeRequest;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -41,10 +44,29 @@ public class Users implements UserDetails {
 
     public static Users from(UserProfile userProfile) {
         return Users.builder()
+                .userSeq(userProfile.getUserSeq())
                 .userId(userProfile.getUserId())
                 .userName(userProfile.getUserName())
                 .avatarImg(userProfile.getAvatarImg())
                 .group(userProfile.getGroup())
+                .build();
+    }
+
+    public static Users of(Long userSeq, ModifyUserRequest modifyUserRequest) {
+        return Users.builder()
+                .userSeq(userSeq)
+                .userId(SecurityContext.getCurrentUser().getUserId())
+                .userName(modifyUserRequest.userName())
+                .avatarImg(modifyUserRequest.avatarImg())
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
+                .build();
+    }
+
+    public static Users of(String password) {
+        return Users.builder()
+                .userSeq(SecurityContext.getCurrentUser().getUserSeq())
+                .password(password)
+                .modifiedBy(SecurityContext.getCurrentUser().getUserSeq())
                 .build();
     }
 

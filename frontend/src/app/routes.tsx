@@ -10,7 +10,8 @@ import SignupPage from "./pages/SignupPage";
 import Unauthorized from "./pages/errors/Unauthorized";
 import Forbidden from "./pages/errors/Forbidden";
 import NotFound from "./pages/errors/NotFound";
-
+import ProfilePage from "./pages/ProfilePage";
+import PasswordChangePage from "./pages/PasswordChangePage";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -35,6 +36,14 @@ export const router = createBrowserRouter([
           {
             path: "tasks/:id",
             Component: TaskDetail,
+          },
+          {
+            path: "profile",
+            Component: ProfilePage,
+          },
+          {
+            path: "profile/password",
+            Component: PasswordChangePage,
           },
         ],
       },

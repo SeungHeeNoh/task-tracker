@@ -6,6 +6,10 @@ public class SystemException extends RuntimeException {
         super(e);
     }
 
+    public SystemException(String message) {
+        super(message);
+    }
+
     public SystemException(Exception e, String message) {
         super(message, e);
     }

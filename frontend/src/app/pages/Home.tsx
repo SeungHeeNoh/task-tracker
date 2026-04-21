@@ -35,9 +35,9 @@ export default function Home() {
     }
 
     if (inputValue.trim() && selectedGroup) {
-      // Find the index of the selected group to use as groupSeq (1-based index)
-      const groupIndex = groups.findIndex(g => g.id === selectedGroup.id);
-      const groupSeq = groupIndex !== -1 ? groupIndex + 1 : 1;
+      // Use the actual group id (which is the groupSeq stringified) if available, fallback to index
+      const groupSeqNumber = Number(selectedGroup.id);
+      const groupSeq = !isNaN(groupSeqNumber) ? groupSeqNumber : (groups.findIndex(g => g.id === selectedGroup.id) + 1 || 1);
 
       const success = await addItem(inputValue.trim(), selectedGroup, groupSeq, format(selectedDate, 'yyyy-MM-dd'));
       if (success) {
@@ -136,73 +136,85 @@ export default function Home() {
       title="My Tasks"
       description={`${completedCount} of ${totalCount} completed`}
     >
-      <div className="flex gap-2 mb-6">
-        <Select value={selectedGroup?.id} onValueChange={(value) => {
-          const group = groups.find(g => g.id === value);
-          setSelectedGroup(group);
-        }}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Select group">
-              {selectedGroup && (
-                <div className="flex items-center gap-2">
-                  <span>{selectedGroup.icon}</span>
-                  <span className="truncate">
-                    {selectedGroup.name.length > 15
-                      ? selectedGroup.name.substring(0, 15) + '...'
-                      : selectedGroup.name}
-                  </span>
-                </div>
-              )}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {groups.map((group) => (
-              <SelectItem key={group.id} value={group.id}>
-                <div className="flex items-center gap-2">
-                  <span>{group.icon}</span>
-                  <span>
-                    {group.name.length > 15
-                      ? group.name.substring(0, 15) + '...'
-                      : group.name}
-                  </span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 shadow-sm sm:shadow-none">
         <Input
           type="text"
           placeholder="Add a new item..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="flex-1"
+          className="flex-1 border-0 focus-visible:ring-0 shadow-none px-2 sm:border sm:focus-visible:ring-2 sm:shadow-sm text-base"
         />
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 ${selectedDate ? "text-blue-600" : ""}`}
-            >
-              <Calendar className="size-4" />
-              {selectedDate ? format(selectedDate, "MMM d") : "Due date"}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarComponent
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2 justify-between border-t sm:border-0 pt-3 sm:pt-0">
+          <div className="flex items-center gap-2">
+            <Select value={selectedGroup?.id} onValueChange={(value) => {
+              const group = groups.find(g => g.id === value);
+              setSelectedGroup(group);
+            }}>
+              <SelectTrigger className="w-[120px] sm:w-48 h-10">
+                <SelectValue placeholder="Select group">
+                  {selectedGroup && (
+                    <div className="flex items-center gap-2">
+                      <span className="truncate hidden sm:inline">
+                        {selectedGroup.name.length > 15
+                          ? selectedGroup.name.substring(0, 15) + '...'
+                          : selectedGroup.name}
+                      </span>
+                      <span className="truncate sm:hidden">
+                        {selectedGroup.name.length > 8
+                          ? selectedGroup.name.substring(0, 8) + '...'
+                          : selectedGroup.name}
+                      </span>
+                    </div>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {group.name.length > 15
+                          ? group.name.substring(0, 15) + '...'
+                          : group.name}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        <Button onClick={handleAddItem}>
-          <Plus className="size-5" />
-          Add
-        </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 py-2 ${selectedDate ? "text-blue-600 border-blue-200 bg-blue-50" : ""}`}
+                >
+                  <Calendar className="size-4" />
+                  <span className="hidden sm:inline">
+                    {selectedDate ? format(selectedDate, "MMM d") : "Due date"}
+                  </span>
+                  <span className="sm:hidden">
+                    {selectedDate ? format(selectedDate, "MM/dd") : "Date"}
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Button onClick={handleAddItem} className="h-10 px-4">
+            <Plus className="size-5 sm:mr-1" />
+            <span className="hidden sm:inline">Add</span>
+          </Button>
+        </div>
       </div>
 
       <Tabs value={viewMode} onValueChange={setViewMode} className="mb-6">

@@ -1,11 +1,12 @@
 package com.hohohehe.tasktracker.config.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hohohehe.tasktracker.common.enumCode.ErrorCode;
 import com.hohohehe.tasktracker.common.exception.JwtAuthenticationException;
-import com.hohohehe.tasktracker.config.redis.RedisProperties;
+import com.hohohehe.tasktracker.common.response.CommonResponse;
 import com.hohohehe.tasktracker.model.dto.UserProfile;
 import com.hohohehe.tasktracker.model.entity.Users;
 import com.hohohehe.tasktracker.service.RedisService;
-import io.jsonwebtoken.JwtException;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -13,19 +14,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -35,7 +32,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final TokenProvider tokenProvider;
     private final JwtProperties jwtProperties;
-    private final RedisProperties redisProperties;
+    private final ObjectMapper objectMapper;
 
     private final static String HEADER_AUTHORIZATION = "X-AccessToken";
     private final static String TOKEN_PREFIX = "Bearer ";
@@ -53,18 +50,18 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         String authorizationHeader = request.getHeader(HEADER_AUTHORIZATION);
         String token = extractToken(authorizationHeader);
 
-        if(token != null && tokenProvider.validToken(token)) {
-            try {
+        try {
+            if (token != null && tokenProvider.validToken(token)) {
                 String userId = tokenProvider.getUserId(token);
 
-                if(StringUtils.isNotEmpty(userId) && SecurityContextHolder.getContext().getAuthentication() == null ) {
+                if (StringUtils.isNotEmpty(userId) && SecurityContextHolder.getContext().getAuthentication() == null) {
                     // redis에서 유저 세션 확인
                     UserProfile userProfile = redisService.getUserProfileCache(userId);
 
                     // redis에 유저 세션 없는 경우
-                    if(userProfile == null) {
+                    if (userProfile == null) {
                         log.warn("Unauthorized access attempt or expired session for user: {}", userId);
-                        throw new JwtAuthenticationException("세션이 만료되었거나 로그아웃된 계정입니다.");
+                        throw new JwtAuthenticationException(ErrorCode.AUTH_SESSION_EXPIRED);
                     }
 
                     // redis cache 객체를 Users 객체로 변환 후 security context에 세팅
@@ -75,10 +72,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch ( JwtException | IllegalArgumentException e ) {
-                log.warn("JWT token validation failed: {}", e.getMessage());
-                SecurityContextHolder.clearContext();
             }
+        } catch (JwtAuthenticationException e) {
+            log.warn("JWT token validation failed: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+
+            CommonResponse<Void> body = CommonResponse.fail(e.getErrorCode());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(objectMapper.writeValueAsString(body));
+            return;
         }
 
         filterChain.doFilter(request, response);

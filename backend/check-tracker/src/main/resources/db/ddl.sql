@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS task_log;
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS `groups`;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS user_group_map;
 
 CREATE TABLE `users`
 (
@@ -34,6 +35,7 @@ CREATE TABLE `user_group_map`
 (
     group_seq  BIGINT   NOT NULL,
     user_seq   BIGINT   NOT NULL,
+    role       VARCHAR(10) NOT NULL DEFAULT 'MEMBER',
     created_at datetime NOT NULL,
     created_by BIGINT   NOT NULL,
     PRIMARY KEY (group_seq, user_seq)

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hohohehe.tasktracker.mapper.UserGroupMapMapper">
+
+    <insert id="insertMember" parameterType="com.hohohehe.tasktracker.model.entity.UserGroupMap">
+        INSERT INTO user_group_map
+        (
+            group_seq,
+            user_seq,
+            role,
+            created_at,
+            created_by
+        )
+        VALUES
+        (
+            #{groupSeq},
+            #{userSeq},
+            #{role},
+            NOW(),
+            #{createdBy}
+        )
+    </insert>
+
+    <select id="existsMember" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM user_group_map
+            WHERE group_seq = #{groupSeq}
+              AND user_seq = #{userSeq}
+        )
+    </select>
+
+    <select id="findRoleByUserAndGroup" resultType="com.hohohehe.tasktracker.common.enumCode.GroupRole">
+        SELECT role
+        FROM user_group_map
+        WHERE group_seq = #{groupSeq}
+          AND user_seq = #{userSeq}
+    </select>
+
+    <select id="countByGroupSeq" resultType="int">
+        SELECT COUNT(*)
+        FROM user_group_map
+        WHERE group_seq = #{groupSeq}
+    </select>
+
+    <select id="countByUserSeq" resultType="int">
+        SELECT COUNT(*)
+        FROM user_group_map
+        WHERE user_seq = #{userSeq}
+    </select>
+</mapper>

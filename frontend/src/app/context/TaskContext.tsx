@@ -55,6 +55,9 @@ interface TaskContextType {
   signup: (userData: { userId: string; userName: string; password: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
   updateProfile: (userData: { userName: string; avatarImg?: string }) => Promise<{ success: boolean; message?: string }>;
   changePassword: (prevPassword: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  issueInvitation: (groupSeq: number, maxUses?: number) => Promise<{ success: boolean; data?: { code: string; maxUses: number; expiresInSeconds: number }; message?: string; code?: string }>;
+  getInvitationPreview: (code: string) => Promise<{ success: boolean; data?: { groupSeq: number; groupName: string; memberCount: number }; message?: string; code?: string }>;
+  acceptInvitation: (code: string) => Promise<{ success: boolean; data?: { groupSeq: number; groupName: string; memberCount: number }; message?: string; code?: string }>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -635,6 +638,87 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     return items.find(item => item.id === id);
   };
 
+  const issueInvitation = async (groupSeq: number, maxUses?: number) => {
+    setIsLoading(true);
+    try {
+      const response = await fetchWithAuth(`/api/v1/groups/${groupSeq}/invitations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxUses })
+      });
+      const result = await response.json();
+      if (result.status === 'SC') {
+        return { success: true, data: result.data };
+      }
+      return { success: false, message: result.message, code: result.code };
+    } catch (e: any) {
+      if (e.message !== 'SessionExpiredRedirect') {
+        return { success: false, message: e.message };
+      }
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getInvitationPreview = async (code: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetchWithAuth(`/api/v1/invitations/${code}`, {
+        method: 'GET'
+      });
+      const result = await response.json();
+      if (result.status === 'SC') {
+        return { success: true, data: result.data };
+      }
+      return { success: false, message: result.message, code: result.code };
+    } catch (e: any) {
+      if (e.message !== 'SessionExpiredRedirect') {
+        return { success: false, message: e.message };
+      }
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const acceptInvitation = async (code: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetchWithAuth(`/api/v1/invitations/${code}/accept`, {
+        method: 'POST'
+      });
+      const result = await response.json();
+      if (result.status === 'SC') {
+        const newGroup = result.data;
+        setGroups(prev => {
+          if (prev.find(g => g.id === String(newGroup.groupSeq))) return prev;
+          
+          const nextIndex = prev.length;
+          const mappedGroup = {
+            id: String(newGroup.groupSeq),
+            name: newGroup.groupName,
+            color: predefinedGroups[nextIndex % predefinedGroups.length].color,
+            icon: predefinedGroups[nextIndex % predefinedGroups.length].icon,
+          };
+          const newGroupsList = [...prev, mappedGroup];
+          localStorage.setItem("taskGroups", JSON.stringify(newGroupsList));
+          return newGroupsList;
+        });
+
+        return { success: true, data: result.data };
+      }
+      return { success: false, message: result.message, code: result.code };
+    } catch (e: any) {
+      if (e.message !== 'SessionExpiredRedirect') {
+        return { success: false, message: e.message };
+      }
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <TaskContext.Provider
       value={{
@@ -654,7 +738,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         logout,
         signup,
         updateProfile,
-        changePassword
+        changePassword,
+        issueInvitation,
+        getInvitationPreview,
+        acceptInvitation
       }}
     >
       {children}

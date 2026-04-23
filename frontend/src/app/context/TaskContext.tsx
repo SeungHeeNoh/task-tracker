@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { HistoryEvent } from "../components/TaskItem";
 
 export interface Group {
@@ -646,7 +646,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const getInvitationPreview = async (code: string) => {
+  const getInvitationPreview = useCallback(async (code: string) => {
     setIsLoading(true);
     try {
       const response = await fetchWithAuth(`/api/v1/invitations/${code}`, {
@@ -665,9 +665,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const acceptInvitation = async (code: string) => {
+  const acceptInvitation = useCallback(async (code: string) => {
     setIsLoading(true);
     try {
       const response = await fetchWithAuth(`/api/v1/invitations/${code}/accept`, {
@@ -699,7 +699,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return (
     <TaskContext.Provider

@@ -40,7 +40,7 @@ public class InvitationController {
     }
 
     @GetMapping("/{code}")
-    public CommonResponse<InvitationPreview> preview(@PathVariable String code) {
+    public CommonResponse<InvitationPreview> preview(@PathVariable(value = "code") String code) {
         try {
             InvitationPreview data = invitationService.getInvitationPreview(code);
             return CommonResponse.success("초대 코드 정보를 조회했습니다.", data);
@@ -55,7 +55,7 @@ public class InvitationController {
     }
 
     @PostMapping("/{code}/accept")
-    public CommonResponse<InvitationPreview> accept(@PathVariable String code) {
+    public CommonResponse<InvitationPreview> accept(@PathVariable(value = "code") String code) {
         try {
             InvitationPreview data = invitationService.acceptInvitation(code);
             return CommonResponse.success("그룹에 가입되었습니다.", data);

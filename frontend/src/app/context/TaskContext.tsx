@@ -641,10 +641,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const issueInvitation = async (groupSeq: number, maxUses?: number) => {
     setIsLoading(true);
     try {
-      const response = await fetchWithAuth(`/api/v1/groups/${groupSeq}/invitations`, {
+      const response = await fetchWithAuth(`/api/v1/invitations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maxUses })
+        body: JSON.stringify({ groupSeq, maxUses })
       });
       const result = await response.json();
       if (result.status === 'SC') {

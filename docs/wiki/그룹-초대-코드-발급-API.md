@@ -6,7 +6,7 @@
 | 항목 | 내용 |
 | :--- | :--- |
 | **API Code**| `G0001` |
-| **URL** | `/api/v1/groups/{groupSeq}/invitations` |
+| **URL** | `/api/v1/invitations` |
 | **HTTP Method** | `POST` |
 | **요청 Content-Type** | `application/json` |
 | **응답 Content-Type** | `application/json; charset=utf-8` |
@@ -20,14 +20,10 @@
 | :--- | :---: | :---: | :--- |
 | `X-AccessToken` | String | O | 인증 토큰 |
 
-#### PATH
-| 파라미터명 | 타입 | 필수여부 | 설명 |
-| :--- | :---: | :---: | :--- |
-| `groupSeq` | Long | O | 초대 코드를 발급할 그룹의 식별자 |
-
 #### BODY
 | 파라미터명 | 타입 | 필수여부 | 설명 |
 | :--- | :---: | :---: | :--- |
+| `groupSeq` | Long | O | 초대 코드를 발급할 그룹의 식별자 |
 | `maxUses` | Integer | | 초대 코드 최대 사용 횟수. 미지정/0 이하일 경우 기본값(10), 상한(100) 초과 시 상한으로 클램프 |
 
 ---

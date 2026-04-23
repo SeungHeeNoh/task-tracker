@@ -21,6 +21,17 @@ public enum ErrorCode {
     TASK_NOT_FOUND("존재하지 않는 태스크입니다."),
     TASK_ACCESS_DENIED("접근 권한이 없습니다."),
 
+    // Group
+    GROUP_NOT_FOUND("존재하지 않는 그룹입니다."),
+    GROUP_ACCESS_DENIED("그룹에 대한 권한이 없습니다."),
+    GROUP_MEMBER_LIMIT_EXCEEDED("그룹 최대 인원을 초과했습니다."),
+    USER_GROUP_LIMIT_EXCEEDED("참여할 수 있는 그룹 수를 초과했습니다."),
+
+    // Invitation
+    INVITATION_NOT_FOUND("존재하지 않거나 만료된 초대 코드입니다."),
+    INVITATION_EXPIRED("만료된 초대 코드입니다."),
+    INVITATION_EXHAUSTED("사용 가능 횟수를 모두 소진한 초대 코드입니다."),
+
     // Common
     INVALID_REQUEST("잘못된 요청입니다."),
     INTERNAL_SERVER_ERROR("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");

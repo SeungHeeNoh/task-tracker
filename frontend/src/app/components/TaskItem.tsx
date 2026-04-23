@@ -173,8 +173,7 @@ export function TaskItem({
                 {text}
               </label>
               {group && (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${group.color} shrink-0`}>
-                  <span>{group.icon}</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border bg-gray-100 text-gray-700 border-gray-200 shrink-0">
                   {group.name}
                 </span>
               )}
@@ -266,28 +265,22 @@ export function TaskItem({
                         <SelectTrigger>
                           <SelectValue placeholder="Select group">
                             {editGroup && (
-                              <div className="flex items-center gap-2">
-                                <span>{editGroup.icon}</span>
-                                <span className="truncate">
-                                  {editGroup.name.length > 15
-                                    ? editGroup.name.substring(0, 15) + '...'
-                                    : editGroup.name}
-                                </span>
-                              </div>
+                              <span className="truncate">
+                                {editGroup.name.length > 15
+                                  ? editGroup.name.substring(0, 15) + '...'
+                                  : editGroup.name}
+                              </span>
                             )}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {availableGroups.map((grp) => (
                             <SelectItem key={grp.id} value={grp.id}>
-                              <div className="flex items-center gap-2">
-                                <span>{grp.icon}</span>
-                                <span>
-                                  {grp.name.length > 15
-                                    ? grp.name.substring(0, 15) + '...'
-                                    : grp.name}
-                                </span>
-                              </div>
+                              <span>
+                                {grp.name.length > 15
+                                  ? grp.name.substring(0, 15) + '...'
+                                  : grp.name}
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -10,6 +10,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -53,5 +55,38 @@ public class RedisService {
             redisTemplate.delete(keys);
             log.info("Cleared all Redis data for user {}: {} keys removed", userId, keys.size());
         }
+    }
+
+    public void saveInvitationCode(String code, Long groupSeq, Long createdBy, int maxUses) {
+        String metaKey = redisProperties.getInvitationKey(code);
+        String usesKey = redisProperties.getInvitationUsesKey(code);
+        long ttl = redisProperties.getTtl().getInvitationTtl();
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("groupSeq", groupSeq);
+        payload.put("createdBy", createdBy);
+        payload.put("maxUses", maxUses);
+
+        redisTemplate.opsForValue().set(metaKey, payload, Duration.ofSeconds(ttl));
+        redisTemplate.opsForValue().set(usesKey, maxUses, Duration.ofSeconds(ttl));
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> findInvitationCode(String code) {
+        String metaKey = redisProperties.getInvitationKey(code);
+        Object payload = redisTemplate.opsForValue().get(metaKey);
+        return (Map<String, Object>) payload;
+    }
+
+    public Long decrementInvitationUses(String code) {
+        String usesKey = redisProperties.getInvitationUsesKey(code);
+        return redisTemplate.opsForValue().increment(usesKey, -1);
+    }
+
+    public void deleteInvitationCode(String code) {
+        String metaKey = redisProperties.getInvitationKey(code);
+        String usesKey = redisProperties.getInvitationUsesKey(code);
+        redisTemplate.delete(metaKey);
+        redisTemplate.delete(usesKey);
     }
 }

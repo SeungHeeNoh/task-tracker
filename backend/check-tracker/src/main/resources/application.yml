@@ -33,6 +33,9 @@ redis:
     user-prefix: 'user:'
     profile-suffix: ':profile'
     token-suffix: ':token'
+    invitation-prefix: 'invite:'
+    invitation-uses-suffix: ':uses'
   ttl:
-    profile-ttl: 604810 # 7일 10초 후 삭제
-    token-ttl: 604810   # 7일 10초 후 삭제
+    profile-ttl: 604810       # 7일 10초 후 삭제
+    token-ttl: 604810         # 7일 10초 후 삭제
+    invitation-ttl: 86400     # 24시간

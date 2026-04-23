@@ -12,6 +12,7 @@ import Forbidden from "./pages/errors/Forbidden";
 import NotFound from "./pages/errors/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import PasswordChangePage from "./pages/PasswordChangePage";
+import InvitePage from "./pages/InvitePage";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -44,6 +45,10 @@ export const router = createBrowserRouter([
           {
             path: "profile/password",
             Component: PasswordChangePage,
+          },
+          {
+            path: "invite/:code",
+            Component: InvitePage,
           },
         ],
       },

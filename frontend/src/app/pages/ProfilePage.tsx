@@ -213,8 +213,8 @@ export default function ProfilePage() {
                             groups.filter(g => !isNaN(Number(g.id))).map(group => (
                                 <div key={group.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-gray-50/50 gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className={`size-10 rounded-full flex items-center justify-center ${group.color} bg-opacity-20`}>
-                                            <span className="text-xl">{group.icon}</span>
+                                        <div className="size-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-600">
+                                            <Users className="size-5" />
                                         </div>
                                         <div>
                                             <h4 className="font-medium text-gray-900">{group.name}</h4>

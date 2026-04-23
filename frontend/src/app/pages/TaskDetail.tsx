@@ -236,8 +236,7 @@ export default function TaskDetail() {
                 <div className="flex-1">
                   <p className="text-sm text-gray-500">Group</p>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium border ${item.group.color}`}>
-                      <span>{item.group.icon}</span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium border bg-gray-100 text-gray-700 border-gray-200">
                       {item.group.name}
                     </span>
                   </div>

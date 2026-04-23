@@ -4,20 +4,7 @@ import { HistoryEvent } from "../components/TaskItem";
 export interface Group {
   id: string;
   name: string;
-  color: string;
-  icon: string;
 }
-
-export const predefinedGroups: Group[] = [
-  { id: "work", name: "Work", color: "bg-blue-100 text-blue-700 border-blue-200", icon: "💼" },
-  { id: "personal", name: "Personal", color: "bg-green-100 text-green-700 border-green-200", icon: "🏠" },
-  { id: "shopping", name: "Shopping", color: "bg-purple-100 text-purple-700 border-purple-200", icon: "🛒" },
-  { id: "health", name: "Health", color: "bg-red-100 text-red-700 border-red-200", icon: "❤️" },
-  { id: "finance", name: "Finance", color: "bg-yellow-100 text-yellow-700 border-yellow-200", icon: "💰" },
-  { id: "family", name: "Family", color: "bg-pink-100 text-pink-700 border-pink-200", icon: "👨‍👩‍👧‍👦" },
-  { id: "education", name: "Education", color: "bg-indigo-100 text-indigo-700 border-indigo-200", icon: "📚" },
-  { id: "other", name: "Other", color: "bg-gray-100 text-gray-700 border-gray-200", icon: "📌" },
-];
 
 export interface Task {
   id: string;
@@ -29,7 +16,7 @@ export interface Task {
   completerAvatar?: string;
   completedDate?: string;
   dueDate?: string;
-  group: Group;
+  group?: Group;
   history: HistoryEvent[];
 }
 
@@ -175,7 +162,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse saved groups:", e);
       }
     }
-    return predefinedGroups;
+    return [];
   });
 
   const fetchTasks = async (viewMode: string) => {
@@ -195,7 +182,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (result.status === 'SC') {
-        const defaultGroup = groups.length > 0 ? groups[0] : predefinedGroups[0];
+        const defaultGroup = groups[0];
         const mappedItems = (result.data || []).map((task: any) => ({
           id: String(task.taskId),
           text: task.title,
@@ -203,7 +190,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           dueDate: task.duedate,
           creatorName: task.creator,
           creatorAvatar: "https://github.com/shadcn.png", // Default avatar
-          group: defaultGroup, // Default group until API supports it
+          group: defaultGroup,
           history: [],
         }));
         setItems(mappedItems);
@@ -282,8 +269,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           const mappedGroups = groupArray.map((g: any, index: number) => ({
             id: String(g.groupSeq || g.id || index + 1),
             name: g.groupName || g.name || `Group ${index + 1}`,
-            color: predefinedGroups[index % predefinedGroups.length].color,
-            icon: predefinedGroups[index % predefinedGroups.length].icon,
           }));
           localStorage.setItem("taskGroups", JSON.stringify(mappedGroups));
           setGroups(mappedGroups);
@@ -320,7 +305,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("groupInfo");
       localStorage.removeItem("taskGroups");
       localStorage.removeItem("currentUser");
-      setGroups(predefinedGroups);
+      setGroups([]);
 
       if (token && token !== "null" && token !== "undefined") {
         await fetch('/api/v1/auth/logout', {
@@ -693,13 +678,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         const newGroup = result.data;
         setGroups(prev => {
           if (prev.find(g => g.id === String(newGroup.groupSeq))) return prev;
-          
-          const nextIndex = prev.length;
-          const mappedGroup = {
+
+          const mappedGroup: Group = {
             id: String(newGroup.groupSeq),
             name: newGroup.groupName,
-            color: predefinedGroups[nextIndex % predefinedGroups.length].color,
-            icon: predefinedGroups[nextIndex % predefinedGroups.length].icon,
           };
           const newGroupsList = [...prev, mappedGroup];
           localStorage.setItem("taskGroups", JSON.stringify(newGroupsList));
